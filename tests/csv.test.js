@@ -18,3 +18,10 @@ test('armarCsv: respuesta sin inscripción deja vacío el registro', () => {
   const csv = armarCsv(cfg(), [{ pregunta_id: 'q3', texto: 'hola', participante: 'p9', creado: 'x' }], []);
   assert.equal(csv.slice(1).split('\r\n')[1], 'x,p9,,¿Algo?,,hola');
 });
+test('armarCsv neutraliza fórmulas', () => {
+  const fila = (texto) => armarCsv(cfg(), [{ pregunta_id: 'q3', texto, participante: 'p', creado: 'x' }], [])
+    .slice(1).split('\r\n')[1].replace('x,p,,¿Algo?,,', '');
+  assert.equal(fila('=HYPERLINK("x")'), `"'=HYPERLINK(""x"")"`);
+  assert.equal(fila('+54 11'), "'+54 11");
+  assert.equal(fila('-'), "'-");
+});

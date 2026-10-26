@@ -1,7 +1,8 @@
 import { opcionesDe, buscarPregunta } from './sesion.js';
 
 const celda = (v) => {
-  const s = v == null ? '' : String(v);
+  let s = v == null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // evita fórmulas al abrir en Excel/Sheets
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
