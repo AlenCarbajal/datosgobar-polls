@@ -134,16 +134,16 @@ const api = {
     leer('registros').forEach(r => r.necesidades.forEach(n => c[n] = (c[n] || 0) + 1));
     return Object.entries(c).map(([necesidad, total]) => ({ necesidad, total })).sort((a, b) => b.total - a.total);
   },
-  paso: async () => DEMO ? localStorage.getItem('paso') || 'inicio' : ok(await sb.from('estado').select('paso').eq('id', 1).single()).paso,
+  paso: async () => valido(DEMO ? localStorage.getItem('paso') : ok(await sb.from('estado').select('paso').eq('id', 1).single()).paso),
   cambiarPaso: async (clave, paso) => DEMO ? localStorage.setItem('paso', paso) : ok(await sb.rpc('cambiar_paso', { p_clave: clave, p_paso: paso })),
   // Avisos al instante (Supabase Realtime). El polling de cada vista queda de respaldo si se corta la conexión.
   escuchar({ alPaso, alVoto, alPresentes }) {
     if (DEMO) {
-      addEventListener('storage', e => { if (e.key === 'paso') alPaso(e.newValue); if (e.key === 'votos') alVoto?.(); });
+      addEventListener('storage', e => { if (e.key === 'paso') alPaso(valido(e.newValue)); if (e.key === 'votos') alVoto?.(); });
       return;
     }
     const canal = sb.channel('sala', { config: { presence: { key: pid } } })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'estado' }, x => alPaso(x.new.paso));
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'estado' }, x => alPaso(valido(x.new.paso)));
     if (alVoto) canal.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, x => alVoto(x.new));
     if (alPresentes) canal.on('presence', { event: 'sync' }, () => alPresentes(Object.keys(canal.presenceState()).length));
     canal.subscribe(estado => { if (estado === 'SUBSCRIBED' && !alPresentes) canal.track({}); }); // los participantes cuentan como presentes
@@ -154,6 +154,7 @@ const api = {
 let C;            // la consulta leída de consulta.md
 let PASOS;        // inicio → preguntas → registro → fin
 let pasoActual, timer;
+const valido = paso => PASOS.includes(paso) ? paso : 'inicio'; // p. ej. una pregunta que se renombró en consulta.md
 const pregunta = id => C.preguntas.find(p => p.id === id);
 const nombrePaso = paso =>
   paso === 'inicio' ? 'Bienvenida' : paso === 'registro' ? 'Registro de necesidades' : paso === 'fin' ? 'Cierre' :
