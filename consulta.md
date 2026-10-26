@@ -126,7 +126,8 @@ Aspectos vinculados con la política internacional de Argentina, las relaciones 
 ## Defensa
 Asuntos vinculados con el personal y la conducción de las Fuerzas Armadas, la defensa territorial, la soberanía y la autodeterminación de la Nación.
 - Fuerzas Armadas
-- Soberanía
+- Soberanía, protección y vigilancia
+- Riesgos y desastres
 
 ## Registro: ¿Qué necesita tu organismo de nosotros?
 - Asistencia técnica
