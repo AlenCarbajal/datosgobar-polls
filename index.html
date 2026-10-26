@@ -142,11 +142,14 @@ const api = {
       addEventListener('storage', e => { if (e.key === 'paso') alPaso(valido(e.newValue)); if (e.key === 'votos') alVoto?.(); });
       return;
     }
-    const canal = sb.channel('sala', { config: { presence: { key: pid } } })
+    // Supabase solo manda la lista de presentes a quien también se anuncia: la pantalla se anuncia con otra clave y no se cuenta.
+    const PANTALLA = 'pantalla-';
+    const canal = sb.channel('sala', { config: { presence: { key: alPresentes ? PANTALLA + pid : pid } } })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'estado' }, x => alPaso(valido(x.new.paso)));
     if (alVoto) canal.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, x => alVoto(x.new));
-    if (alPresentes) canal.on('presence', { event: 'sync' }, () => alPresentes(Object.keys(canal.presenceState()).length));
-    canal.subscribe(estado => { if (estado === 'SUBSCRIBED' && !alPresentes) canal.track({}); }); // los participantes cuentan como presentes
+    if (alPresentes) canal.on('presence', { event: 'sync' }, () =>
+      alPresentes(Object.keys(canal.presenceState()).filter(k => !k.startsWith(PANTALLA)).length));
+    canal.subscribe(estado => { if (estado === 'SUBSCRIBED') canal.track({}); });
   },
 };
 
