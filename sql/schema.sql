@@ -9,9 +9,11 @@ alter table admins enable row level security;
 
 create or replace function es_admin()
 returns boolean
-language sql stable security definer set search_path = public
+language sql stable security definer set search_path = public, pg_temp
 as $$
-  select exists (select 1 from admins where lower(email) = lower(auth.jwt() ->> 'email'))
+  -- Los usuarios anónimos de Supabase Auth nunca son admins.
+  select coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+     and exists (select 1 from admins where lower(email) = lower(auth.jwt() ->> 'email'))
 $$;
 revoke execute on function es_admin() from public;
 grant execute on function es_admin() to anon, authenticated;
@@ -78,7 +80,7 @@ alter table respuestas enable row level security;
 -- Rechaza respuestas que no corresponden a la config de la sesión.
 create or replace function validar_respuesta()
 returns trigger
-language plpgsql security definer set search_path = public
+language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
   s sesiones%rowtype;
@@ -123,7 +125,8 @@ create trigger respuestas_validar before insert on respuestas
   for each row execute function validar_respuesta();
 
 revoke all on respuestas from anon, authenticated;
-grant select, insert on respuestas to anon, authenticated;
+grant select on respuestas to anon, authenticated;
+grant insert (sesion_id, pregunta_id, participante, opcion_id, texto) on respuestas to anon, authenticated; -- creado no se elige
 drop policy if exists "cualquiera responde" on respuestas;
 create policy "cualquiera responde" on respuestas for insert to anon, authenticated with check (true);
 drop policy if exists "cualquiera ve respuestas" on respuestas;
@@ -142,7 +145,7 @@ create table if not exists inscripciones (
 alter table inscripciones enable row level security;
 
 revoke all on inscripciones from anon, authenticated;
-grant insert on inscripciones to anon, authenticated;
+grant insert (sesion_id, participante, datos) on inscripciones to anon, authenticated; -- creado no se elige
 grant select on inscripciones to authenticated;
 drop policy if exists "cualquiera se inscribe en sesiones activas" on inscripciones;
 create policy "cualquiera se inscribe en sesiones activas" on inscripciones for insert to anon, authenticated
@@ -153,7 +156,7 @@ create policy "admins ven inscripciones" on inscripciones for select to authenti
 -- La pantalla solo necesita el total, no los datos personales.
 create or replace function resumen_inscripciones(p_sesion uuid)
 returns json
-language sql stable security definer set search_path = public
+language sql stable security definer set search_path = public, pg_temp
 as $$
   select json_build_object('total', (select count(*) from inscripciones where sesion_id = p_sesion))
 $$;
@@ -164,7 +167,7 @@ grant execute on function resumen_inscripciones(uuid) to anon, authenticated;
 -- Borra respuestas e inscripciones y vuelve al inicio. ronda + 1 hace que los celulares olviden lo anterior.
 create or replace function reiniciar_sesion(p_sesion uuid)
 returns void
-language plpgsql security definer set search_path = public
+language plpgsql security definer set search_path = public, pg_temp
 as $$
 begin
   if not es_admin() then
@@ -190,5 +193,8 @@ exception when duplicate_object then null;
 end $$;
 
 -- ===== Primer admin =====
--- Reemplazá por el email con el que vas a entrar al admin y ejecutá esta línea:
+-- ¡Antes! Quien se registre con un email de esta tabla sería admin. Por eso:
+--   1. Authentication > Sign In / Providers: desactivar "Allow new users to sign up".
+--   2. Authentication > Users > Add user, con "Auto Confirm User", para crear tu usuario.
+--   3. Recién entonces, con ese mismo email, ejecutar:
 -- insert into admins values ('tu@email');
