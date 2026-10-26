@@ -1,0 +1,14 @@
+/* Preset "neutro" (por defecto): sobrio y sin identidad de ningún organismo.
+   Es también la plantilla para crear un preset propio: copiá este archivo como
+   temas/<nombre>.css, cambiá los valores y sumá el nombre a PRESETS en js/tema.js.
+   --color-principal y --color-acento los elige cada sesión desde el formulario. */
+:root {
+  --fondo: #F6F7F9;
+  --superficie: #FFFFFF;
+  --borde: #CDD2DA;
+  --texto: #1A1A1A;
+  --texto-suave: #4B5260;
+  --exito: #15803D;
+  --error: #B91C1C;
+  --aviso: #A04A0B;
+}

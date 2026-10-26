@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Muestra de estética</title>
+<link rel="stylesheet" href="../css/base.css">
+</head>
+<body>
+<!-- Probar con ?preset=neutro | ?preset=datos-gob-ar, y ?colorPrincipal=%23RRGGBB&colorAcento=%23RRGGBB -->
+<header class="encabezado">
+  <div class="encabezado__interior">
+    <span id="marca" class="encabezado__organismo">Mi organismo</span>
+    <span>Jornada de prueba</span>
+  </div>
+  <div class="mosaico" aria-hidden="true"><span>≠</span><span>á</span><span>↑</span><span>@</span><span>≥</span><span>π</span><span>»</span></div>
+</header>
+
+<main>
+  <p class="eyebrow">Pregunta 3 de 14</p>
+  <h1>Muestra de componentes</h1>
+  <progress class="progreso" value="3" max="14">3 de 14</progress>
+
+  <section class="tarjeta">
+    <h2>¿Te parece bien publicar estos datos?</h2>
+    <ul class="etiquetas"><li class="etiqueta">Transporte</li><li class="etiqueta">Salud</li><li class="etiqueta">Educación</li></ul>
+    <fieldset class="opciones">
+      <legend class="campo">Elegí una opción</legend>
+      <label class="opcion"><input type="radio" name="o" checked><span>Ok</span></label>
+      <label class="opcion"><input type="radio" name="o"><span>No</span></label>
+      <label class="opcion"><input type="radio" name="o"><span>Comentar</span></label>
+    </fieldset>
+    <label class="campo" for="coment">Comentario <small>(obligatorio)</small></label>
+    <textarea id="coment" aria-invalid="true" aria-describedby="coment-error"></textarea>
+    <p class="mensaje mensaje--error" id="coment-error">Escribí tu comentario para enviar.</p>
+    <label class="campo" for="nombre">Nombre</label>
+    <input id="nombre" type="text" value="Ana">
+    <p class="acciones">
+      <button class="boton" type="button">Enviar</button>
+      <button class="boton boton--secundario" type="button">Volver</button>
+    </p>
+    <p class="mensaje mensaje--exito">Respuesta enviada.</p>
+    <p class="mensaje mensaje--aviso">Modo de prueba: las respuestas no se guardan.</p>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Resultados</h2>
+    <div class="barra" style="--valor: 60%"><span>Ok</span><span class="barra__pista"></span><b>12 · 60%</b></div>
+    <div class="barra barra--secundaria" style="--valor: 25%"><span>No</span><span class="barra__pista"></span><b>5 · 25%</b></div>
+    <div class="barra" style="--valor: 15%"><span>Comentar</span><span class="barra__pista"></span><b>3 · 15%</b></div>
+  </section>
+</main>
+
+<script type="module">
+import { aplicarTema, resolverEstetica } from '../js/tema.js';
+const q = new URLSearchParams(location.search);
+const color = k => q.get(k) && (q.get(k).startsWith('#') ? q.get(k) : '#' + q.get(k));
+const estetica = { preset: q.get('preset'), colorPrincipal: color('colorPrincipal'), colorAcento: color('colorAcento') };
+aplicarTema(estetica);
+const { logo } = resolverEstetica(estetica);
+if (logo) document.getElementById('marca').replaceWith(Object.assign(document.createElement('img'),
+  { className: 'encabezado__logo', src: '../' + logo, alt: 'Mi organismo' }));
+</script>
+</body>
+</html>

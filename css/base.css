@@ -1,0 +1,145 @@
+/* Tokens, layout y componentes compartidos por participar, pantalla y admin.
+   Los colores viven SOLO en esta declaración de tokens y en temas/*.css.
+   js/tema.js pisa --color-principal, --color-acento, --texto-sobre-*, --fuente y --radio
+   según la estética de la sesión; un preset (temas/<nombre>.css) pisa el resto. */
+
+:root {
+  /* Paleta (valores del preset neutro; cada preset los redefine) */
+  --color-principal: #1F2937;
+  --color-acento: #2563EB;
+  --texto-sobre-principal: #FFFFFF;
+  --texto-sobre-acento: #FFFFFF;
+  --fondo: #F6F7F9;
+  --superficie: #FFFFFF;
+  --borde: #CDD2DA;
+  --texto: #1A1A1A;
+  --texto-suave: #4B5260;
+  --exito: #15803D;
+  --error: #B91C1C;
+  --aviso: #A04A0B;
+
+  /* Derivados: se recalculan solos con los colores de arriba */
+  --principal-suave: color-mix(in srgb, var(--color-principal) 10%, var(--superficie));
+  --acento-suave: color-mix(in srgb, var(--color-acento) 12%, var(--superficie));
+  --exito-suave: color-mix(in srgb, var(--exito) 10%, var(--superficie));
+  --error-suave: color-mix(in srgb, var(--error) 8%, var(--superficie));
+  --aviso-suave: color-mix(in srgb, var(--aviso) 12%, var(--superficie));
+  /* Acento usado como texto sobre fondo claro: oscurecido para que un acento claro (amarillo) siga legible */
+  --acento-texto: color-mix(in srgb, var(--color-acento) 45%, var(--texto));
+  --barra-secundaria: color-mix(in srgb, var(--color-acento) 45%, var(--superficie));
+  --foco: var(--color-acento);
+
+  --radio: 8px;
+  --fuente: system-ui, sans-serif;
+}
+
+/* Vista proyectada: todo está en rem, así escala con el ancho del proyector. */
+html.pantalla { font-size: clamp(16px, 1.25vw, 40px); }
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: var(--fuente); color: var(--texto); background: var(--fondo);
+  line-height: 1.5;
+}
+main { max-width: 45rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+h1 { font-size: 1.625rem; font-weight: 800; line-height: 1.2; margin: 0 0 .25rem; }
+h2 { font-size: 1.125rem; font-weight: 800; line-height: 1.3; margin: 0 0 .875rem; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+/* Encabezado: logo (o nombre del organismo) + texto del evento */
+.encabezado { background: var(--color-principal); color: var(--texto-sobre-principal); }
+.encabezado__interior {
+  max-width: 45rem; margin: 0 auto; padding: .875rem 1rem;
+  display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+}
+.encabezado__logo { height: 1.75rem; display: block; }
+.encabezado__organismo { font-weight: 800; font-size: 1.0625rem; }
+/* Firma visual: cada preset decide si la muestra con [data-firma] (ver temas/datos-gob-ar.css) */
+.mosaico { display: none; }
+
+/* Botones */
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+  font: inherit; font-weight: 600; min-height: 44px; padding: .625rem 1.25rem; cursor: pointer;
+  background: var(--color-acento); color: var(--texto-sobre-acento);
+  border: 2px solid var(--color-acento); border-radius: var(--radio);
+}
+.boton--secundario { background: var(--superficie); color: var(--texto); border-color: var(--borde); }
+.boton:disabled { opacity: .6; cursor: wait; }
+.boton--ancho { width: 100%; }
+.acciones { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 0; }
+
+.tarjeta {
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: 1.25rem; margin-bottom: 1rem;
+}
+
+/* Rótulo chico sobre un título ("Pregunta 3 de 14") */
+.eyebrow {
+  font-size: .8125rem; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+  color: var(--acento-texto); margin: .5rem 0;
+}
+
+.etiquetas { display: flex; flex-wrap: wrap; gap: .375rem; list-style: none; padding: 0; margin: 0 0 1rem; }
+.etiqueta {
+  display: inline-block; background: var(--principal-suave); color: var(--texto);
+  border-radius: calc(var(--radio) * 2); padding: .25rem .625rem; font-size: .8125rem; font-weight: 500;
+}
+
+/* Opciones de selección única:
+   <label class="opcion"><input type="radio" name="…"><span>Texto</span></label> */
+.opciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .5rem; border: 0; padding: 0; margin: 0 0 .75rem; }
+.opcion { position: relative; cursor: pointer; }
+.opcion input { position: absolute; opacity: 0; }
+.opcion span {
+  display: flex; gap: .625rem; align-items: center; min-height: 44px; padding: .75rem;
+  background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); font-weight: 500;
+}
+.opcion span::before {
+  content: ''; flex: none; display: grid; place-items: center; width: 1.375rem; height: 1.375rem;
+  border: 2px solid var(--texto-suave); border-radius: 50%; font-size: .875rem; font-weight: 800; line-height: 1;
+}
+.opcion input:checked + span { border-color: var(--color-acento); background: var(--acento-suave); font-weight: 600; }
+.opcion input:checked + span::before {
+  content: '✓'; background: var(--color-acento); border-color: var(--color-acento); color: var(--texto-sobre-acento);
+}
+.opcion input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+/* Campos */
+.campo { display: block; font-size: .875rem; font-weight: 600; margin: .75rem 0 .25rem; }
+.campo small { font-weight: 400; color: var(--texto-suave); }
+/* :where() deja la especificidad en 0 para que [aria-invalid] gane sin !important */
+:where(input:not([type=radio]):not([type=checkbox]), textarea, select) {
+  width: 100%; min-height: 44px; font: inherit; color: var(--texto); background: var(--superficie);
+  border: 2px solid var(--borde); border-radius: var(--radio); padding: .625rem;
+}
+textarea { min-height: 5rem; resize: vertical; }
+[aria-invalid=true] { border-color: var(--error); }
+
+/* Mensajes en línea */
+.mensaje { font-size: .875rem; margin: .625rem 0 0; }
+.mensaje--error { color: var(--error); }
+.mensaje--exito { color: var(--exito); }
+.mensaje--aviso { background: var(--aviso-suave); color: var(--aviso); padding: .5rem .75rem; border-radius: var(--radio); }
+
+/* Progreso: <progress class="progreso" value="3" max="14"> */
+.progreso {
+  appearance: none; width: 100%; height: .5rem; border: 0; border-radius: var(--radio);
+  background: var(--principal-suave); overflow: hidden;
+}
+.progreso::-webkit-progress-bar { background: var(--principal-suave); }
+.progreso::-webkit-progress-value { background: var(--color-acento); }
+.progreso::-moz-progress-bar { background: var(--color-acento); }
+
+/* Barra de resultado, siempre con número además de color:
+   <div class="barra" style="--valor: 60%"><span>Ok</span><span class="barra__pista"></span><b>12 · 60%</b></div> */
+.barra { display: grid; grid-template-columns: minmax(6rem, 30%) 1fr auto; gap: .625rem; align-items: center; margin: .5rem 0; }
+.barra__pista { height: 1.125rem; background: var(--principal-suave); border-radius: calc(var(--radio) / 2); overflow: hidden; }
+.barra__pista::before {
+  content: ''; display: block; height: 100%; width: var(--valor, 0%);
+  background: var(--color-acento); transition: width .4s;
+}
+.barra--secundaria .barra__pista::before { background: var(--barra-secundaria); }
+.barra b { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) { .barra__pista::before { transition: none; } }

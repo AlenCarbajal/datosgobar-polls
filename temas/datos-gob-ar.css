@@ -1,0 +1,31 @@
+/* Preset "datos-gob-ar": identidad de datos.gob.ar.
+   Logo por defecto: img/logo-datos-gob-ar-blanco.png (blanco, va sobre el encabezado navy).
+   Tipografía Montserrat (js/tema.js la carga de Google Fonts).
+   Firma visual: mosaico de tiles con glifos debajo del encabezado, solo con [data-firma]:
+   <div class="mosaico" aria-hidden="true"><span>≠</span><span>á</span><span>↑</span><span>@</span><span>≥</span><span>π</span><span>»</span></div> */
+:root {
+  --color-principal: #232D4F;  /* navy */
+  --color-acento: #393793;     /* índigo */
+  --violeta: #B369ED;
+  --tile: #E8E9F1;
+  --fondo: #F5F6FA;
+  --superficie: #FFFFFF;
+  --borde: #D5D8E3;
+  --texto: #232D4F;
+  --texto-suave: #4F5672;
+  --exito: #2E7D32;
+  --error: #C62828;
+  --aviso: #8A5300;
+  --fuente: 'Montserrat', system-ui, sans-serif;
+
+  --principal-suave: var(--tile);
+  --barra-secundaria: var(--violeta);
+  --foco: var(--violeta);
+}
+
+[data-firma] .mosaico { display: grid; grid-template-columns: 3fr 1fr 2fr 1fr 4fr 1fr 2fr; height: 2.125rem; }
+.mosaico span { display: grid; place-items: center; color: var(--superficie); font-size: .9375rem; }
+.mosaico span:nth-child(1), .mosaico span:nth-child(7) { background: var(--color-principal); }
+.mosaico span:nth-child(2), .mosaico span:nth-child(6) { background: var(--violeta); }
+.mosaico span:nth-child(3), .mosaico span:nth-child(5) { background: var(--color-acento); }
+.mosaico span:nth-child(4) { background: var(--tile); color: var(--color-principal); }
