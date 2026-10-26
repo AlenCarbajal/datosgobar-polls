@@ -7,10 +7,8 @@ import { aplicarTema, resolverEstetica } from './tema.js';
 const YA_EXISTE = '23505'; // ya respondió esa pregunta o ya se inscribió: se trata como hecho
 const app = $('#app');
 
-let pid = localStorage.getItem('pid');
-if (!pid) localStorage.setItem('pid', pid = crypto.randomUUID());
-
-let api, sesion, demo = false, codigo, timer;
+let pid, api, sesion, demo = false, codigo, timer, dejar;
+let pedido = 0, version = 0; // ver sondear()
 let pendiente = null; // sesión nueva que llegó con un formulario a medio completar: se aplica al enviar o volver
 let elegida = null;   // paso lista: pregunta abierta en este celular
 
@@ -103,10 +101,12 @@ function conectarRegistro(form) {
     if (primero) return primero.focus();
     const boton = form.querySelector('[type=submit]');
     boton.disabled = true;
+    const { ronda } = sesion;
     try { await api.inscribir({ sesion_id: sesion.id, participante: pid, datos }); }
     catch (err) {
       if (err?.code !== YA_EXISTE) { boton.disabled = false; return mensaje($('#msg'), 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
     }
+    if (sesion?.ronda !== ronda) return; // se reinició mientras se enviaba: ya se re-dibujó, no marcar
     marcar('inscripto');
     seguir();
   };
@@ -183,10 +183,12 @@ function conectarPregunta(form) {
       return texto.focus();
     }
     enviar.disabled = true; // doble toque: un solo envío
+    const { ronda } = sesion;
     try { await api.responder({ sesion_id: sesion.id, pregunta_id: id, participante: pid, opcion_id: elegido?.value ?? null, texto: t || null }); }
     catch (err) {
       if (err?.code !== YA_EXISTE) { enviar.disabled = false; return mensaje(msg, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
     }
+    if (sesion?.ronda !== ronda) return; // se reinició mientras se enviaba: ya se re-dibujó, no marcar
     marcar('votado', id);
     const enLista = elegida !== null;
     elegida = null; // en una lista vuelve a la lista, con esta en verde
@@ -240,9 +242,10 @@ function dibujar() {
   form?.addEventListener('input', () => form.classList.toggle('con-datos', sucio()));
 }
 
-// ¿El formulario visible tiene algo elegido o escrito sin enviar?
-const sucio = () => [...(app.querySelector('form')?.elements || [])]
-  .some(e => e.type === 'radio' ? e.checked : !!e.value?.trim());
+// ¿El formulario visible tiene algo elegido o escrito sin enviar? `escrito` solo cuenta texto o datos de registro.
+const campos = () => [...(app.querySelector('form')?.elements || [])];
+const sucio = () => campos().some(e => e.type === 'radio' ? e.checked : !!e.value?.trim());
+const escrito = () => campos().some(e => e.type !== 'radio' && !!e.value?.trim());
 
 // ---------- Cambios de la sesión (Realtime + respaldo cada 10 s) ----------
 const igual = (a, b) => ['paso', 'ronda', 'archivada', 'config'].every(k => JSON.stringify(a[k]) === JSON.stringify(b[k]));
@@ -251,7 +254,7 @@ function aplicar(s) {
   if (s.paso !== sesion.paso || s.ronda !== sesion.ronda) elegida = null;
   const tema = JSON.stringify(s.config.estetica) !== JSON.stringify(sesion.config.estetica);
   sesion = s;
-  pendiente = null;
+  pendiente = null; // dibujar() reemplaza #app: también se va el aviso de "La presentación avanzó"
   if (tema) { aplicarTema(s.config.estetica); pintarMarca(); }
   dibujar();
 }
@@ -259,19 +262,44 @@ function aplicar(s) {
 // Después de enviar o volver: aplica lo que haya quedado en espera.
 const seguir = () => pendiente ? aplicar(pendiente) : dibujar();
 
-function recibir(s) {
-  if (!sesion) return;
-  if (!s || s.archivada) { sesion = null; clearTimeout(timer); return formCodigo('No encontramos una sesión activa con ese código.'); }
-  if (igual(s, sesion)) { pendiente = null; return; }
-  // Con algo a medio escribir no se re-dibuja (se perdería). Un reinicio (ronda nueva) sí se aplica ya.
-  if (s.ronda === sesion.ronda && sucio()) { pendiente = s; return; }
-  aplicar(s);
+// Aviso no destructivo mientras hay un cambio de paso en espera: la persona decide si descarta lo escrito.
+function avisoPaso() {
+  const visible = !!pendiente && pendiente.paso !== sesion.paso;
+  let el = $('#aviso-paso');
+  if (!visible) return el?.remove();
+  if (el) return;
+  el = Object.assign(document.createElement('div'), { id: 'aviso-paso', className: 'mensaje mensaje--aviso aviso-paso' });
+  el.setAttribute('role', 'status');
+  el.innerHTML = '<p>La presentación avanzó.</p><button type="button" class="boton boton--secundario">Ir a lo que se está presentando</button>';
+  el.querySelector('button').onclick = () => { if (pendiente) aplicar(pendiente); scrollTo(0, 0); };
+  app.prepend(el);
 }
 
+function recibir(s) {
+  if (!sesion) return;
+  if (!s || s.archivada) {
+    sesion = null; clearTimeout(timer); dejar?.();
+    return formCodigo('No encontramos una sesión activa con ese código.');
+  }
+  if (igual(s, sesion)) pendiente = null;
+  // Un reinicio (ronda nueva) se aplica ya. Un cambio de paso espera solo si hay texto escrito o datos de registro;
+  // un cambio de config espera también con solo una opción elegida (así no se pierde nada a medio completar).
+  else if (s.ronda === sesion.ronda && (s.paso !== sesion.paso ? escrito() : sucio())) pendiente = s;
+  else return aplicar(s);
+  avisoPaso();
+}
+
+// Respaldo de Realtime cada 10 s y al volver a la pestaña. `pedido` deja una sola cadena de consultas viva;
+// `version` sube también con cada aviso de Realtime, así una respuesta que salió antes no pisa un estado más nuevo.
 async function sondear() {
   clearTimeout(timer);
   if (!sesion) return;
-  try { recibir(await api.sesionPorCodigo(codigo)); } catch { /* sin conexión: el próximo intento lo resuelve */ }
+  const n = ++pedido, v = ++version;
+  let s;
+  try { s = await api.sesionPorCodigo(codigo); } catch { /* sin conexión: el próximo intento lo resuelve */ }
+  if (n !== pedido) return; // empezó otra consulta: esa sigue la cadena
+  if (s !== undefined && v === version) recibir(s);
+  clearTimeout(timer);
   if (sesion) timer = setTimeout(sondear, 10000);
 }
 
@@ -282,6 +310,8 @@ window.visualViewport?.addEventListener('resize', () => {
 });
 
 try {
+  pid = localStorage.getItem('pid');
+  if (!pid) localStorage.setItem('pid', pid = crypto.randomUUID());
   const r = await cargarSesion();
   demo = new URLSearchParams(location.search).has('demo');
   if (r) ({ api, demo, codigo } = r);
@@ -289,7 +319,7 @@ try {
     sesion = r.sesion;
     pintarMarca();
     dibujar();
-    api.escuchar(sesion.id, { alSesion: recibir, participante: pid });
+    dejar = api.escuchar(sesion.id, { alSesion: (s) => { version++; recibir(s); }, participante: pid });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) sondear(); }); // al desbloquear el celular
     timer = setTimeout(sondear, 10000);
   } else {
@@ -298,5 +328,5 @@ try {
   }
 } catch {
   pintarMarca();
-  app.innerHTML = espera('No pudimos conectarnos', 'Revisá tu conexión y recargá la página.');
+  app.innerHTML = espera('No pudimos abrir la sesión', 'Revisá tu conexión y que el navegador permita guardar datos de este sitio. Después recargá la página.');
 }
