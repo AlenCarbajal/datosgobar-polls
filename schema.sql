@@ -76,3 +76,8 @@ $$;
 
 revoke execute on function cambiar_paso(text, text) from public;
 grant execute on function cambiar_paso(text, text) to anon;
+
+-- ===== Tiempo real =====
+-- Avisa al instante a la pantalla cuando llega un voto y a los celulares cuando cambia el paso.
+-- Si ya ejecutaste lo de arriba, ejecutá solo esta línea.
+alter publication supabase_realtime add table votos, estado;

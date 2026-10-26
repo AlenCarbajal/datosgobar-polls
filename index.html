@@ -19,7 +19,7 @@
   main { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
   h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; line-height: 1.2; }
   .sub { color: var(--texto2); margin: 0 0 28px; }
-  .num { font-size: 13px; font-weight: 600; color: var(--indigo); margin: 8px 0 8px; letter-spacing: .02em; }
+  .num { font-size: 13px; font-weight: 600; color: var(--indigo); margin: 8px 0; letter-spacing: .02em; }
   .card { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
   .card h2 { font-size: 18px; font-weight: 800; margin: 0 0 14px; line-height: 1.3; }
   fieldset { border: 0; padding: 0; margin: 0 0 12px; }
@@ -37,7 +37,8 @@
   label.campo small { font-weight: 400; color: var(--texto2); }
   textarea, input[type=text], input[type=email] { width: 100%; font: inherit; color: inherit; border: 2px solid var(--borde); border-radius: 8px; padding: 10px; background: #fff; }
   textarea { min-height: 80px; resize: vertical; }
-  button { font: inherit; font-weight: 600; background: var(--navy); color: #fff; border: 0; border-radius: 8px; padding: 12px 20px; cursor: pointer; margin-top: 14px; }
+  button { font: inherit; font-weight: 600; background: var(--navy); color: #fff; border: 2px solid var(--navy); border-radius: 8px; padding: 10px 20px; cursor: pointer; margin: 14px 6px 0 0; }
+  button.secundario { background: #fff; color: var(--navy); border-color: var(--borde); }
   button:disabled { opacity: .6; cursor: wait; }
   .msg { font-size: 14px; margin: 10px 0 0; }
   .msg.error { color: var(--error); }
@@ -47,30 +48,29 @@
   .pulso { width: 14px; height: 14px; border-radius: 50%; background: var(--violeta); margin: 0 auto 24px; animation: pulso 1.6s infinite; }
   @keyframes pulso { 50% { opacity: .3; transform: scale(1.6); } }
   @media (prefers-reduced-motion: reduce) { .pulso { animation: none; } }
+  .temas { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 16px; }
+  .temas li { background: var(--tile); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 500; }
 
   /* pantalla del presentador */
   body.pantalla main, body.pantalla .top { max-width: 1280px; }
   .controles { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
   .controles button { margin: 0; }
-  .controles #ant { background: #fff; color: var(--navy); border: 2px solid var(--borde); }
   .controles span { flex: 1; text-align: center; font-weight: 800; font-size: 18px; }
   .controles .msg { flex-basis: 100%; text-align: center; margin: 0; }
   .bienvenida { display: flex; gap: 48px; align-items: center; justify-content: center; padding: 32px 0; flex-wrap: wrap; }
   .bienvenida #qr { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid var(--borde); }
   .bienvenida h1 { font-size: 36px; }
   .url { font-size: 28px; font-weight: 800; color: var(--indigo); word-break: break-all; margin: 8px 0 0; }
+  .presentes { font-size: 18px; font-weight: 600; margin: 16px 0 0; }
   .grilla { display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
   .qr { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 16px; text-align: center; position: sticky; top: 16px; }
   .qr #qr { display: flex; justify-content: center; margin: 8px 0; }
   .qr p { margin: 0; font-size: 14px; word-break: break-all; }
   .grande { font-size: 44px; font-weight: 800; color: var(--indigo); line-height: 1; }
   .barra { display: flex; height: 18px; border-radius: 4px; overflow: hidden; background: var(--tile); margin: 10px 0 8px; }
-  .barra div { transition: width .5s; }
+  .barra div { transition: width .4s; }
   .ley { display: flex; gap: 18px; font-size: 14px; flex-wrap: wrap; }
   .ley i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
-  .temas { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 16px; }
-  .temas li { background: var(--tile); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 500; }
-  button.omitir { background: #fff; color: var(--navy); border: 2px solid var(--borde); margin-left: 6px; }
   .coment { border-left: 3px solid var(--violeta); background: #F6F4FC; padding: 6px 10px; margin: 8px 0 0; font-size: 15px; }
   .nec { display: grid; grid-template-columns: 180px 1fr 40px; gap: 10px; align-items: center; margin: 8px 0; font-size: 15px; }
   .nec .barra { margin: 0; }
@@ -87,40 +87,23 @@
 <main id="app"></main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
-<script>
-// ===== Configuración: lo único que hay que editar =====
-const CONFIG = {
-  supabaseUrl: 'https://rtfazosvnvtdldswxgua.supabase.co', // ej. 'https://abcd1234.supabase.co' — vacío = modo demo (guarda en este navegador)
-  supabaseKey: 'sb_publishable_nFEuOTho3mWWmAR2fvhVPQ_g-jG-aqh', // la "anon" / "publishable" key: es pública por diseño, la seguridad la ponen las políticas de schema.sql
-  organismo: 'datos.gob.ar',
-  logo: '', // ej. 'logo-datosgobar.svg' (versión blanca, junto a index.html) — vacío = se muestra el nombre como texto
-  evento: 'Jornada de Datos Abiertos 2026',
-  titulo: 'Consulta sobre supertemas y temas asociados',
-  instrucciones: 'En cada pregunta revisá los temas asociados al supertema y votá una opción.',
-  // Cada pregunta es un supertema. No cambies los id una vez que empezó la votación: los votos quedan atados a ellos.
-  preguntas: [
-    { id: 's1', texto: 'Población y sociedad', temas: ['Género y diversidad sexual', 'Discapacidad', 'Culto y religión', 'Demografía y población', 'Pueblos originarios', 'Migración y naturalización', 'Condiciones habitacionales', 'Pobreza y desigualdad'] },
-    { id: 's2', texto: 'Medio ambiente', temas: ['Contaminación y calidad ambiental', 'Residuos y basurales', 'Sustentabilidad', 'Biodiversidad y recursos naturales', 'Áreas protegidas', 'Suelo y degradación de tierras', 'Meteorología'] },
-    { id: 's3', texto: 'Economía y finanzas', temas: ['Infraestructura y obras públicas', 'Prestaciones sociales', 'Presupuesto', 'Cuentas nacionales', 'Precios', 'Sector primario', 'Sector secundario', 'Sector terciario', 'Comercio exterior', 'Mercado laboral e ingresos', 'Deuda pública', 'Mercado financiero'] },
-    { id: 's4', texto: 'Transporte', temas: ['Transporte público urbano', 'Aviación y aeropuertos', 'Transporte marítimo, fluvial y puertos', 'Ferrocarriles'] },
-    { id: 's5', texto: 'Energía', temas: ['Hidrocarburos y combustibles fósiles', 'Energía eléctrica', 'Energía hidroeléctrica', 'Energías renovables'] },
-    { id: 's6', texto: 'Justicia y seguridad', temas: ['Estadísticas criminales', 'Canales y líneas de denuncia', 'Trámites y registro automotor', 'Servicio penitenciario', 'Centros y tribunales de justicia', 'Administración de la justicia', 'Derechos humanos', 'Violencia de género', 'Elecciones'] },
-    { id: 's7', texto: 'Gobierno y sector público', temas: ['Compras y contrataciones', 'Rendición de cuentas', 'Personal del Estado', 'Inmuebles del Estado', 'Gobierno abierto'] },
-    { id: 's8', texto: 'Agroganadería, pesca y forestación', temas: ['Lácteos', 'Agricultura', 'Ganadería', 'Pesca', 'Vitivinicultura', 'Apicultura', 'Horticultura', 'Agroindustria'] },
-    { id: 's9', texto: 'Salud', temas: ['Medicamentos', 'Vigilancia epidemiológica', 'Vacunación', 'Estadísticas vitales', 'Recursos humanos en salud', 'Salud sexual y reproductiva', 'Obras sociales y prepagas', 'Establecimientos de salud', 'Especialidades y tratamientos médicos', 'Trasplantes y donaciones', 'Adicciones y consumo problemático'] },
-    { id: 's10', texto: 'Educación, cultura y deportes', temas: ['Educación', 'Evaluación educativa', 'Cultura', 'Deportes'] },
-    { id: 's11', texto: 'Ciencia y tecnología', temas: ['Acceso y uso de TIC', 'Ciencia e investigación', 'Infraestructura digital'] },
-    { id: 's12', texto: 'Territorio', temas: ['División territorial', 'Ecosistemas', 'Geología', 'Hidrografía'] },
-    { id: 's13', texto: 'Asuntos Internacionales', temas: ['Diplomacia'] },
-    { id: 's14', texto: 'Defensa', temas: ['Fuerzas Armada', 'Soberanía'] },
-  ],
-  necesidades: ['Asistencia técnica', 'Capacitación', 'Publicación de datos', 'Normalización de datos', 'Uso de APIs', 'Otro'],
-};
-// ======================================================
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+<script type="module">
+import { leerConsulta } from './consulta.js';
 
-const DEMO = !CONFIG.supabaseUrl;
+// ===== Configuración técnica (se toca una vez). Las preguntas están en consulta.md =====
+const CONFIG = {
+  supabaseUrl: 'https://rtfazosvnvtdldswxgua.supabase.co', // vacío = modo demo (guarda en este navegador)
+  supabaseKey: 'sb_publishable_nFEuOTho3mWWmAR2fvhVPQ_g-jG-aqh', // pública por diseño: la seguridad la ponen las políticas de schema.sql
+  organismo: 'datos.gob.ar',
+  logo: '', // ej. 'logo-datosgobar.svg' (versión blanca, junto a index.html); vacío = el nombre como texto
+  evento: 'Jornada de Datos Abiertos 2026',
+};
+// ======================================================================================
+
+// Demo también con ?demo, para probar sin tocar la base real.
+const DEMO = !CONFIG.supabaseUrl || new URLSearchParams(location.search).has('demo');
 const OPCIONES = { favor: 'Ok', contra: 'No', comentario: 'Comentar' };
-const PASOS = ['inicio', ...CONFIG.preguntas.map(p => p.id), 'registro', 'fin'];
 const URL_PARTICIPAR = location.href.split('#')[0];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
@@ -129,70 +112,78 @@ const leer = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } 
 let pid = localStorage.getItem('pid');
 if (!pid) localStorage.setItem('pid', pid = crypto.randomUUID());
 
-async function rest(path, body) {
-  const r = await fetch(`${CONFIG.supabaseUrl}/rest/v1/${path}`, {
-    method: body ? 'POST' : 'GET',
-    headers: { apikey: CONFIG.supabaseKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: body && JSON.stringify(body),
-  });
-  if (!r.ok) throw { status: r.status };
-  const t = await r.text();
-  return t ? JSON.parse(t) : null;
-}
+// ---------- Datos: Supabase, o localStorage en modo demo ----------
+const sb = DEMO ? null : supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+const ok = ({ data, error }) => { if (error) throw error; return data; };
+const YA_VOTO = '23505'; // violación de unique (pregunta, participante)
 
-// ponytail: modo demo en localStorage para probar sin Supabase; solo ve los datos de este navegador.
+// ponytail: modo demo en localStorage; solo ve los datos de este navegador (sirve con dos pestañas).
 function guardarDemo(k, fila) {
   const filas = leer(k);
-  if (k === 'votos' && filas.some(f => f.pregunta === fila.pregunta && f.participante === fila.participante)) throw { status: 409 };
-  localStorage.setItem(k, JSON.stringify([{ ...fila, creado: new Date().toISOString() }, ...filas]));
+  if (k === 'votos' && filas.some(f => f.pregunta === fila.pregunta && f.participante === fila.participante)) throw { code: YA_VOTO };
+  localStorage.setItem(k, JSON.stringify([{ ...fila, id: Date.now() + Math.random(), creado: new Date().toISOString() }, ...filas]));
 }
 
 const api = {
-  votar: v => DEMO ? guardarDemo('votos', v) : rest('votos', v),
-  registrar: r => DEMO ? guardarDemo('registros', r) : rest('registros', r),
-  votos: () => DEMO ? leer('votos') : rest('votos?select=pregunta,opcion,comentario,creado&order=creado.desc'),
-  necesidades: () => {
-    if (!DEMO) return rest('rpc/conteo_necesidades', {});
+  votar: async v => DEMO ? guardarDemo('votos', v) : ok(await sb.from('votos').insert(v)),
+  registrar: async r => DEMO ? guardarDemo('registros', r) : ok(await sb.from('registros').insert(r)),
+  votos: async () => DEMO ? leer('votos') : ok(await sb.from('votos').select('id,pregunta,opcion,comentario').order('creado', { ascending: false })),
+  necesidades: async () => {
+    if (!DEMO) return ok(await sb.rpc('conteo_necesidades'));
     const c = {};
     leer('registros').forEach(r => r.necesidades.forEach(n => c[n] = (c[n] || 0) + 1));
     return Object.entries(c).map(([necesidad, total]) => ({ necesidad, total })).sort((a, b) => b.total - a.total);
   },
-  paso: async () => DEMO ? localStorage.getItem('paso') || 'inicio' : (await rest('estado?select=paso&id=eq.1'))[0]?.paso || 'inicio',
-  cambiarPaso: (clave, paso) => DEMO ? localStorage.setItem('paso', paso) : rest('rpc/cambiar_paso', { p_clave: clave, p_paso: paso }),
+  paso: async () => DEMO ? localStorage.getItem('paso') || 'inicio' : ok(await sb.from('estado').select('paso').eq('id', 1).single()).paso,
+  cambiarPaso: async (clave, paso) => DEMO ? localStorage.setItem('paso', paso) : ok(await sb.rpc('cambiar_paso', { p_clave: clave, p_paso: paso })),
+  // Avisos al instante (Supabase Realtime). El polling de cada vista queda de respaldo si se corta la conexión.
+  escuchar({ alPaso, alVoto, alPresentes }) {
+    if (DEMO) {
+      addEventListener('storage', e => { if (e.key === 'paso') alPaso(e.newValue); if (e.key === 'votos') alVoto?.(); });
+      return;
+    }
+    const canal = sb.channel('sala', { config: { presence: { key: pid } } })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'estado' }, x => alPaso(x.new.paso));
+    if (alVoto) canal.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votos' }, x => alVoto(x.new));
+    if (alPresentes) canal.on('presence', { event: 'sync' }, () => alPresentes(Object.keys(canal.presenceState()).length));
+    canal.subscribe(estado => { if (estado === 'SUBSCRIBED' && !alPresentes) canal.track({}); }); // los participantes cuentan como presentes
+  },
 };
 
-let timer, pasoActual, datos;
+// ---------- Estado compartido de las vistas ----------
+let C;            // la consulta leída de consulta.md
+let PASOS;        // inicio → preguntas → registro → fin
+let pasoActual, timer;
+const pregunta = id => C.preguntas.find(p => p.id === id);
 const nombrePaso = paso =>
   paso === 'inicio' ? 'Bienvenida' : paso === 'registro' ? 'Registro de necesidades' : paso === 'fin' ? 'Cierre' :
-  `Pregunta ${CONFIG.preguntas.findIndex(p => p.id === paso) + 1} de ${CONFIG.preguntas.length}`;
-const pregunta = paso => CONFIG.preguntas.find(p => p.id === paso);
+  `Pregunta ${C.preguntas.findIndex(p => p.id === paso) + 1} de ${C.preguntas.length}`;
+const listaTemas = p => p.temas.length ? `<ul class="temas">${p.temas.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
 const hecho = texto => `<p class="hecho"><span aria-hidden="true">✓</span> ${texto}</p>`;
 const espera = (titulo, texto) => `<div class="espera"><div class="pulso" aria-hidden="true"></div><h1>${titulo}</h1><p class="sub">${texto}</p></div>`;
-function enviando(form, si) { form.querySelector('button').disabled = si; }
-function error(form, texto) { form.querySelector('.msg').className = 'msg error'; form.querySelector('.msg').textContent = texto; }
+function mensaje(el, texto, esError = true) { el.className = esError ? 'msg error' : 'msg'; el.textContent = texto; }
 
-// ---------- Vista participante: sigue el paso que elige el presentador ----------
-async function participante() {
-  document.body.className = '';
-  try {
-    const paso = await api.paso();
-    if (esPantalla()) return;
-    if (paso !== pasoActual) vistaParticipante(pasoActual = paso);
-  } catch {
-    if (esPantalla()) return;
-    if (!pasoActual) $('#app').innerHTML = espera('Conectando…', 'Revisá tu conexión. Seguimos intentando.');
-  }
-  clearTimeout(timer);
-  timer = setTimeout(participante, 3000); // ponytail: polling cada 3 s; Supabase Realtime si fueran miles
+// ---------- Participante: sigue el paso que elige el presentador ----------
+function participante() {
+  const ir = paso => { if (paso && paso !== pasoActual) vistaParticipante(pasoActual = paso); };
+  const sondear = async () => {
+    clearTimeout(timer);
+    try { ir(await api.paso()); }
+    catch { if (!pasoActual) $('#app').innerHTML = espera('Conectando…', 'Revisá tu conexión. Seguimos intentando.'); }
+    timer = setTimeout(sondear, DEMO ? 3000 : 10000);
+  };
+  api.escuchar({ alPaso: ir });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) sondear(); }); // al desbloquear el celular
+  sondear();
 }
 
 function vistaParticipante(paso) {
   const p = pregunta(paso);
-  $('#app').innerHTML = (DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador. Completá la configuración de Supabase para usarlo en el evento.</p>' : '') + (
+  $('#app').innerHTML = (DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador.</p>' : '') + (
     p ? formPregunta(p) :
-    paso === 'registro' ? formRegistro() :
+    paso === 'registro' && C.registro ? formRegistro() :
     paso === 'fin' ? espera('¡Gracias por participar!', 'Ya podés cerrar esta página.') :
-    espera('Ya estás adentro', `${esc(CONFIG.instrucciones)} Cuando empiece la presentación vas a ver acá cada pregunta, sin recargar.`));
+    espera('Ya estás adentro', `${esc(C.instrucciones)} Cuando empiece la presentación vas a ver acá cada pregunta, sin recargar.`));
   conectarFormularios();
 }
 
@@ -202,23 +193,22 @@ const formPregunta = p => `
     <h2>${esc(p.texto)}</h2>
     ${listaTemas(p)}
     ${localStorage.getItem('votado:' + p.id) ? hecho('Ya registramos tu respuesta. Mirá la pantalla para ver los resultados.') : `
-    <fieldset><legend>Tu opinión sobre este supertema y sus temas</legend><div class="opciones">
+    <fieldset><legend>Tu opinión</legend><div class="opciones">
       ${Object.entries(OPCIONES).map(([v, t]) => `<label class="opcion"><input type="radio" name="opcion" value="${v}"><span>${t}</span></label>`).join('')}
     </div></fieldset>
-    <label class="campo" for="c-${esc(p.id)}">Comentario <small>(opcional si elegís Ok o No)</small></label>
-    <textarea id="c-${esc(p.id)}" name="comentario" maxlength="1000"></textarea>
-    <button type="submit">Enviar respuesta</button> <button type="button" class="omitir">Omitir</button><p class="msg" role="status"></p>`}
+    <label class="campo" for="comentario">Comentario <small>(opcional si elegís ${OPCIONES.favor} o ${OPCIONES.contra})</small></label>
+    <textarea id="comentario" name="comentario" maxlength="1000"></textarea>
+    <button type="submit">Enviar respuesta</button><button type="button" class="secundario" id="omitir">Omitir</button>
+    <p class="msg" role="status"></p>`}
   </form>`;
-
-const listaTemas = p => p.temas?.length ? `<ul class="temas">${p.temas.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
 
 const formRegistro = () => `
   <p class="num">Registro de necesidades</p>
   <form class="card" id="registro" novalidate>
     ${localStorage.getItem('registrado') ? hecho('Recibimos tu registro. Nos vamos a poner en contacto.') : `
-    <h2>¿Qué necesita tu organismo de nosotros?</h2>
+    <h2>${esc(C.registro.titulo)}</h2>
     <fieldset><legend>Elegí una o más opciones</legend><div class="chips">
-      ${CONFIG.necesidades.map(n => `<label class="chip"><input type="checkbox" name="necesidad" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
+      ${C.registro.opciones.map(n => `<label class="chip"><input type="checkbox" name="necesidad" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
     </div></fieldset>
     <label class="campo" for="organismo">Organismo</label>
     <input type="text" id="organismo" name="organismo" maxlength="200" autocomplete="organization">
@@ -228,85 +218,98 @@ const formRegistro = () => `
     <input type="email" id="email" name="email" maxlength="200" autocomplete="email">
     <label class="campo" for="detalle">Contanos más <small>(opcional)</small></label>
     <textarea id="detalle" name="detalle" maxlength="2000"></textarea>
-    <button type="submit">Registrar</button><p class="msg" role="status"></p>`}
+    <button type="submit">Registrar</button>
+    <p class="msg" role="status"></p>`}
   </form>`;
 
 function conectarFormularios() {
   const form = $('form[data-pregunta]');
-  if (form) form.onsubmit = async e => {
-    e.preventDefault();
-    if (localStorage.getItem('votado:' + form.dataset.pregunta)) return;
-    const id = form.dataset.pregunta, d = new FormData(form);
-    const opcion = d.get('opcion'), comentario = (d.get('comentario') || '').trim();
-    if (!opcion) return error(form, 'Elegí una opción antes de enviar.');
-    if (opcion === 'comentario' && !comentario) return error(form, 'Escribí tu comentario antes de enviar.');
-    enviando(form, true);
-    try {
-      await api.votar({ pregunta: id, participante: pid, opcion, comentario: comentario || null });
-    } catch (err) {
-      if (err.status !== 409) { enviando(form, false); return error(form, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
-    }
-    localStorage.setItem('votado:' + id, '1'); // 409 = ya había votado: lo tratamos como hecho
-    form.innerHTML = `<h2>${esc(pregunta(id).texto)}</h2>` + hecho('¡Gracias! Mirá la pantalla para ver los resultados.');
-  };
-  // ponytail: "Omitir" no se guarda en la base, solo cierra la pregunta en este celular.
-  const omitir = form?.querySelector('.omitir');
-  if (omitir) omitir.onclick = () => {
-    localStorage.setItem('votado:' + form.dataset.pregunta, '1');
-    form.innerHTML = `<h2>${esc(pregunta(form.dataset.pregunta).texto)}</h2>` + hecho('Omitiste esta pregunta. Esperá la siguiente.');
-  };
+  if (form?.querySelector('button')) {
+    const id = form.dataset.pregunta, msg = form.querySelector('.msg'), boton = form.querySelector('[type=submit]');
+    const cerrar = texto => { localStorage.setItem('votado:' + id, '1'); form.innerHTML = `<h2>${esc(pregunta(id).texto)}</h2>` + hecho(texto); };
+    form.onsubmit = async e => {
+      e.preventDefault();
+      const d = new FormData(form), opcion = d.get('opcion'), comentario = d.get('comentario').trim();
+      if (!opcion) return mensaje(msg, 'Elegí una opción antes de enviar.');
+      if (opcion === 'comentario' && !comentario) return mensaje(msg, 'Escribí tu comentario antes de enviar.');
+      boton.disabled = true;
+      try { await api.votar({ pregunta: id, participante: pid, opcion, comentario: comentario || null }); }
+      catch (err) {
+        if (err.code !== YA_VOTO) { boton.disabled = false; return mensaje(msg, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
+      }
+      cerrar('¡Gracias! Mirá la pantalla para ver los resultados.');
+    };
+    // ponytail: "Omitir" no se guarda en la base, solo cierra la pregunta en este celular.
+    $('#omitir').onclick = () => cerrar('Omitiste esta pregunta. Esperá la siguiente.');
+  }
 
   const reg = $('#registro');
-  if (reg) reg.onsubmit = async e => {
+  if (reg?.querySelector('button')) reg.onsubmit = async e => {
     e.preventDefault();
-    if (localStorage.getItem('registrado')) return;
-    const d = new FormData(reg), necesidades = d.getAll('necesidad');
-    const fila = { necesidades, organismo: d.get('organismo').trim(), nombre: d.get('nombre').trim() || null, email: d.get('email').trim() || null, detalle: d.get('detalle').trim() || null };
-    if (!necesidades.length) return error(reg, 'Elegí al menos una necesidad.');
-    if (!fila.organismo) return error(reg, 'Indicá tu organismo.');
-    if (fila.email && !reg.email.checkValidity()) return error(reg, 'Revisá el email: parece incompleto.');
-    enviando(reg, true);
+    const d = new FormData(reg), msg = reg.querySelector('.msg'), necesidades = d.getAll('necesidad');
+    const opcional = k => d.get(k).trim() || null;
+    const fila = { necesidades, organismo: d.get('organismo').trim(), nombre: opcional('nombre'), email: opcional('email'), detalle: opcional('detalle') };
+    if (!necesidades.length) return mensaje(msg, 'Elegí al menos una opción.');
+    if (!fila.organismo) return mensaje(msg, 'Indicá tu organismo.');
+    if (fila.email && !reg.email.checkValidity()) return mensaje(msg, 'Revisá el email: parece incompleto.');
+    reg.querySelector('button').disabled = true;
     try { await api.registrar(fila); }
-    catch { enviando(reg, false); return error(reg, 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
+    catch { reg.querySelector('button').disabled = false; return mensaje(msg, 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
     localStorage.setItem('registrado', '1');
     reg.innerHTML = hecho('Recibimos tu registro. Nos vamos a poner en contacto.');
   };
 }
 
-// ---------- Vista presentador: #pantalla/CLAVE ----------
-const clave = () => decodeURIComponent(location.hash.split('/')[1] || '');
+// ---------- Presentador: #pantalla/CLAVE ----------
+const clave = decodeURIComponent(location.hash.split('/')[1] || '');
+let votos = [], necesidades = [], presentes = null;
+let ultimoCambio = 0; // una lectura que salió antes de terminar un cambio de paso trae el paso viejo: se ignora
 
 function pantalla() {
   document.body.className = 'pantalla';
-  const manda = DEMO || clave();
+  const manda = DEMO || clave;
   $('#app').innerHTML = `
     <div class="controles">
-      ${manda ? '<button id="ant" type="button">← Anterior</button>' : ''}
+      ${manda ? '<button id="ant" type="button" class="secundario">← Anterior</button>' : ''}
       <span id="paso-nombre"></span>
       ${manda ? '<button id="sig" type="button">Siguiente →</button>' : ''}
       <p class="msg" role="status">${manda ? '' : 'Solo lectura. Para manejar la presentación abrí esta pantalla con #pantalla/TU-CLAVE.'}</p>
     </div>
     <div id="escena"></div>`;
-  if (manda) { $('#ant').onclick = () => mover(-1); $('#sig').onclick = () => mover(1); }
-  tickPantalla();
+  if (manda) {
+    $('#ant').onclick = () => mover(-1);
+    $('#sig').onclick = () => mover(1);
+    // Flechas, AvPág/RePág y barra espaciadora: funcionan con un control remoto de presentaciones.
+    addEventListener('keydown', e => {
+      if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); mover(1); }
+      if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); mover(-1); }
+    });
+  }
+  api.escuchar({
+    alPaso: paso => { if (paso !== pasoActual && Date.now() > ultimoCambio) escena(paso); }, // otro dispositivo cambió el paso
+    alVoto: v => {
+      if (!v) return refrescar(); // demo: avisa sin datos
+      if (!votos.some(x => x.id === v.id)) votos.unshift(v);
+      pintar();
+    },
+    alPresentes: n => { presentes = n; const el = $('#presentes'); if (el) el.textContent = textoPresentes(); },
+  });
+  refrescar();
 }
 
-let ultimoCambio = 0; // una lectura que empezó antes de terminar un cambio de paso trae el paso viejo: se ignora
-
-async function tickPantalla() {
+// Lectura completa: al abrir y como respaldo de Realtime. Las necesidades no tienen aviso en vivo (son datos privados).
+async function refrescar() {
+  clearTimeout(timer);
   const inicio = Date.now();
   try {
-    const [paso, votos, necesidades] = await Promise.all([api.paso(), api.votos(), api.necesidades()]);
-    if (!esPantalla()) return;
-    datos = { votos, necesidades };
+    const [paso, v, n] = await Promise.all([api.paso(), api.votos(), api.necesidades()]);
+    votos = v; necesidades = n;
     if (paso !== pasoActual && inicio > ultimoCambio) escena(paso); else pintar();
+    if ($('.controles .msg').classList.contains('error')) mensaje($('.controles .msg'), '', false);
   } catch {
-    if (!esPantalla()) return;
-    $('.controles .msg').className = 'msg error';
-    $('.controles .msg').textContent = 'Sin conexión con la base. Reintentando…';
+    mensaje($('.controles .msg'), 'Sin conexión con la base. Reintentando…');
   }
-  clearTimeout(timer);
-  timer = setTimeout(tickPantalla, 3000);
+  timer = setTimeout(refrescar, ['registro', 'fin'].includes(pasoActual) || DEMO ? 3000 : 15000);
 }
 
 async function mover(delta) {
@@ -316,22 +319,25 @@ async function mover(delta) {
   ultimoCambio = Infinity;
   escena(nuevo);
   try {
-    await api.cambiarPaso(clave(), nuevo);
-    $('.controles .msg').textContent = '';
+    await api.cambiarPaso(clave, nuevo);
+    if (['registro', 'fin'].includes(nuevo)) refrescar(); // traer los totales de necesidades ya
   } catch {
     escena(anterior);
-    $('.controles .msg').className = 'msg error';
-    $('.controles .msg').textContent = 'No se pudo cambiar el paso. Revisá la clave en la dirección (#pantalla/TU-CLAVE).';
+    mensaje($('.controles .msg'), 'No se pudo cambiar el paso. Revisá la clave en la dirección (#pantalla/TU-CLAVE).');
   }
   ultimoCambio = Date.now();
 }
+
+const textoPresentes = () => presentes === null ? '' : `${presentes} ${presentes === 1 ? 'persona conectada' : 'personas conectadas'}`;
 
 function escena(paso) {
   pasoActual = paso;
   $('#paso-nombre').textContent = nombrePaso(paso);
   const url = esc(URL_PARTICIPAR.replace(/^https?:\/\//, ''));
   $('#escena').innerHTML = paso === 'inicio'
-    ? `<div class="bienvenida"><div id="qr"></div><div><p class="num">${esc(CONFIG.titulo)}</p><h1>Sumate desde tu celular:<br>escaneá el código o entrá a</h1><p class="url">${url}</p></div></div>`
+    ? `<div class="bienvenida"><div id="qr"></div><div>
+        <p class="num">${esc(C.titulo)}</p><h1>Sumate desde tu celular:<br>escaneá el código o entrá a</h1>
+        <p class="url">${url}</p><p class="presentes" id="presentes">${textoPresentes()}</p></div></div>`
     : `<div class="grilla"><aside class="qr"><p><b>Sumate desde tu celular</b></p><div id="qr"></div><p>${url}</p></aside><div id="resultados"></div></div>`;
   const lado = paso === 'inicio' ? 320 : 200;
   if (window.QRCode) new QRCode($('#qr'), { text: URL_PARTICIPAR, width: lado, height: lado, colorDark: '#232D4F' });
@@ -340,50 +346,46 @@ function escena(paso) {
 
 function pintar() {
   const el = $('#resultados');
-  if (!el || !datos) return;
+  if (!el) return;
   const p = pregunta(pasoActual);
   el.innerHTML = p ? tarjetaPregunta(p) : pasoActual === 'registro' ? tarjetaNecesidades()
-    : CONFIG.preguntas.map(tarjetaPregunta).join('') + tarjetaNecesidades();
+    : C.preguntas.map(tarjetaPregunta).join('') + (C.registro ? tarjetaNecesidades() : '');
 }
 
 function tarjetaPregunta(p) {
-  const vs = datos.votos.filter(v => v.pregunta === p.id);
+  const vs = votos.filter(v => v.pregunta === p.id);
   const favor = vs.filter(v => v.opcion === 'favor').length, contra = vs.filter(v => v.opcion === 'contra').length;
   const total = favor + contra, pct = total ? Math.round(favor / total * 100) : 0;
   const comentarios = vs.filter(v => v.comentario);
   return `<div class="card"><h2>${esc(p.texto)}</h2>
     ${pasoActual === p.id ? listaTemas(p) : ''}
-    <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>${OPCIONES.favor} · ${vs.length} respuestas</span></div>
-    <div class="barra"><div style="width:${total ? pct : 0}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>${OPCIONES.favor} · ${vs.length} ${vs.length === 1 ? 'respuesta' : 'respuestas'}</span></div>
+    <div class="barra"><div style="width:${pct}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>
     <div class="ley"><span><i style="background:var(--indigo)"></i>${OPCIONES.favor} ${favor}</span><span><i style="background:var(--violeta)"></i>${OPCIONES.contra} ${contra}</span><span>Comentarios ${comentarios.length}</span></div>
     ${comentarios.slice(0, 4).map(c => `<p class="coment">“${esc(c.comentario)}”</p>`).join('')}
   </div>`;
 }
 
 function tarjetaNecesidades() {
-  const n = datos.necesidades, max = Math.max(1, ...n.map(x => x.total));
-  return `<div class="card"><h2>¿Qué necesitan los organismos?</h2>${n.length ? n.map(x => `
+  const max = Math.max(1, ...necesidades.map(x => x.total));
+  return `<div class="card"><h2>${esc(C.registro.titulo)}</h2>${necesidades.length ? necesidades.map(x => `
     <div class="nec"><span>${esc(x.necesidad)}</span><div class="barra"><div style="width:${x.total / max * 100}%;background:var(--navy)"></div></div><b>${x.total}</b></div>`).join('')
     : '<p style="margin:0">Todavía no hay registros.</p>'}</div>`;
 }
 
-// Flechas, AvPág/RePág y barra espaciadora: funcionan con un control remoto de presentaciones.
-addEventListener('keydown', e => {
-  if (!$('#sig') || e.target.closest('input, textarea')) return;
-  if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); mover(1); }
-  if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); mover(-1); }
-});
-
+// ---------- Arranque ----------
 $('#org').innerHTML = CONFIG.logo ? `<img src="${esc(CONFIG.logo)}" alt="${esc(CONFIG.organismo)}">` : `<b>${esc(CONFIG.organismo)}</b>`;
 $('#evento').textContent = CONFIG.evento;
-function esPantalla() { return location.hash.startsWith('#pantalla'); }
-function ruta() {
-  clearTimeout(timer);
-  pasoActual = datos = null;
-  esPantalla() ? pantalla() : participante();
+addEventListener('hashchange', () => location.reload()); // cambiar entre participante y pantalla arranca de cero
+try {
+  const r = await fetch('consulta.md', { cache: 'no-cache' });
+  if (!r.ok) throw new Error();
+  C = leerConsulta(await r.text());
+  PASOS = ['inicio', ...C.preguntas.map(p => p.id), ...(C.registro ? ['registro'] : []), 'fin'];
+  location.hash.startsWith('#pantalla') ? pantalla() : participante();
+} catch {
+  $('#app').innerHTML = espera('No pudimos cargar la consulta', 'Recargá la página en unos segundos.');
 }
-addEventListener('hashchange', ruta);
-ruta();
 </script>
 </body>
 </html>
