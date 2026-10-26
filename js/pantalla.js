@@ -197,7 +197,7 @@ function recibir(s, inicio) {
   sesion = s;
   if (tema) { aplicarTema(s.config.estetica); pintarMarca(); }
   dibujar();
-  if (reinicio) refrescar(); // se borraron las respuestas: traer la lista nueva
+  if (reinicio) { respuestas = []; refrescar(); } // se borraron las respuestas: vaciar y traer la lista nueva
 }
 
 async function refrescar() {

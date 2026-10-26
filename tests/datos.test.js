@@ -81,7 +81,7 @@ test('supabase: agregarAdmin guarda el email en minúsculas y sin espacios', asy
   const sb = falsoSupabase(); await crearApi({ supabase: sb }).agregarAdmin('  Ana@Mail.COM ');
   assert.deepEqual(sb.llamadas[0].ops[0], ['insert', { email: 'ana@mail.com' }]);
 });
-test('supabase: quitarAdmin compara sin distinguir mayúsculas y escapa comodines', async () => {
-  const sb = falsoSupabase(); await crearApi({ supabase: sb }).quitarAdmin(' A_na%@Mail.com ');
-  assert.deepEqual(sb.llamadas[0].ops.at(-1), ['ilike', 'email', 'A\\_na\\%@Mail.com']);
+test('supabase: quitarAdmin compara exacto con el email en minúsculas', async () => {
+  const sb = falsoSupabase(); await crearApi({ supabase: sb }).quitarAdmin(' A*na@Mail.com ');
+  assert.deepEqual(sb.llamadas[0].ops.at(-1), ['eq', 'email', 'a*na@mail.com']);
 });

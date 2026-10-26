@@ -68,7 +68,7 @@ function apiSupabase(sb) {
     async conteos(id) { return conteosDe(await tabla('respuestas', id, 'id,pregunta_id,opcion_id')); },
     async admins() { return ok(await sb.from('admins').select('email').order('email')).map(a => a.email); },
     async agregarAdmin(email) { ok(await sb.from('admins').insert({ email: email.trim().toLowerCase() })); },
-    async quitarAdmin(email) { ok(await sb.from('admins').delete().ilike('email', email.trim().replace(/[%_\\]/g, '\\$&'))); },
+    async quitarAdmin(email) { ok(await sb.from('admins').delete().eq('email', email.trim().toLowerCase())); },
   };
 }
 
