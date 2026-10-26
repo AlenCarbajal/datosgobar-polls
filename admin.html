@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrar sesiones</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  /* Solo tokens: los colores salen de css/base.css y temas/*.css */
+  [hidden] { display: none !important; }
+  main { max-width: 60rem; }
+  .suave { color: var(--texto-suave); }
+  .encabezado .boton { min-height: 40px; padding: .375rem .875rem; }
+  #cuenta { display: flex; gap: .75rem; align-items: center; }
+  #quien { font-size: .875rem; }
+  .fila { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
+  .fila > * { flex: 1 1 12rem; }
+  .fila > .boton { flex: none; }
+  .formulario { max-width: 26rem; margin: 2rem auto; }
+  .ayuda { font-size: .8125rem; color: var(--texto-suave); margin: .25rem 0 0; }
+
+  /* Lista de sesiones */
+  .sesiones { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
+  .sesion { padding: 1rem; }
+  .sesion h3 { margin: 0; font-size: 1.0625rem; }
+  .sesion__dato { margin: .25rem 0 0; color: var(--texto-suave); }
+  .sesion__codigo { font-weight: 700; color: var(--acento-texto); }
+  .sesion--archivada { background: var(--fondo); }
+  .acciones--chicas { margin-top: .75rem; }
+  .acciones--chicas .boton { padding: .375rem .75rem; font-size: .875rem; }
+  .boton--peligro { color: var(--error); border-color: var(--error); background: var(--superficie); }
+
+  .admins { list-style: none; padding: 0; margin: 0 0 1rem; }
+  .admins li { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .25rem 0; border-bottom: 1px solid var(--borde); }
+
+  /* Editor */
+  .barra-editor { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between;
+    background: var(--fondo); padding: .75rem 0; border-bottom: 1px solid var(--borde); margin-bottom: 1rem; }
+  .barra-editor h1 { margin: 0; font-size: 1.25rem; }
+  .barra-editor p { margin: 0; }
+  #errores { margin: 0 0 1rem; }
+  #errores ul { margin: .25rem 0 0; padding-left: 1.25rem; }
+  .estetica { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; }
+  @media (max-width: 48rem) { .estetica { grid-template-columns: 1fr; } }
+  .vista { width: 100%; height: 34rem; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--superficie); }
+  .color { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .color input[type=color] { width: 4rem; height: 44px; padding: .125rem; border: 2px solid var(--borde-campo); border-radius: var(--radio); background: var(--superficie); }
+  .enlace { font: inherit; font-size: .875rem; font-weight: 600; color: var(--acento-texto); background: none; border: 0; padding: .5rem 0; min-height: 44px; text-decoration: underline; cursor: pointer; }
+
+  .paso { border-left: 6px solid var(--color-acento); }
+  .paso__cabeza { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+  .paso__cabeza h3 { margin: 0; font-size: 1.0625rem; }
+  .item-editor { border: 1px solid var(--borde); border-radius: var(--radio); padding: .75rem; margin: .5rem 0; background: var(--fondo); }
+  .item-editor .campo:first-child { margin-top: 0; }
+  .mini-acciones { display: flex; gap: .25rem; flex-wrap: wrap; }
+  .mini-acciones .boton { min-width: 44px; padding: .375rem .625rem; }
+  .check { display: flex; gap: .5rem; align-items: center; min-height: 44px; font-weight: 600; font-size: .875rem; }
+  .check input { width: 1.25rem; height: 1.25rem; }
+  .opcion-fila { display: grid; grid-template-columns: minmax(0, 1fr) 13rem auto; gap: .5rem; align-items: center; margin: .5rem 0; }
+  @media (max-width: 40rem) { .opcion-fila { grid-template-columns: 1fr; } }
+  details.pegar { margin-top: 1rem; }
+  details.pegar summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+  h2 small { font-weight: 500; color: var(--texto-suave); font-size: .875rem; }
+
+  dialog { border: 1px solid var(--borde); border-radius: var(--radio); padding: 1.25rem; max-width: 28rem; width: calc(100% - 2rem); color: var(--texto); background: var(--superficie); }
+  dialog::backdrop { background: color-mix(in srgb, var(--texto) 50%, transparent); }
+  dialog h2 { margin-top: 0; }
+  #qr { display: grid; place-items: center; margin: 1rem 0; }
+  #qr-link { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header class="encabezado">
+  <div class="encabezado__interior">
+    <span class="encabezado__organismo">Administrar sesiones</span>
+    <span id="cuenta" hidden><span id="quien"></span><button type="button" class="boton boton--secundario" id="salir">Salir</button></span>
+  </div>
+</header>
+
+<main>
+  <p id="cargando" class="suave">Cargando…</p>
+
+  <!-- Entrar -->
+  <form id="entrar" class="tarjeta formulario" novalidate hidden>
+    <h1>Entrar</h1>
+    <p class="suave">Con el email y la contraseña de tu cuenta de administración.</p>
+    <label class="campo" for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required aria-describedby="entrar-msj">
+    <label class="campo" for="clave">Contraseña</label>
+    <input id="clave" type="password" autocomplete="current-password" required aria-describedby="entrar-msj">
+    <p id="entrar-msj" role="alert"></p>
+    <p class="acciones"><button class="boton boton--ancho" type="submit">Entrar</button></p>
+  </form>
+
+  <section id="no-autorizado" class="tarjeta formulario" hidden>
+    <h1>Sin permiso</h1>
+    <p>Tu cuenta no está autorizada. Pedile a quien administra que agregue tu email.</p>
+  </section>
+
+  <!-- Lista de sesiones y admins -->
+  <div id="panel" hidden>
+    <section class="tarjeta">
+      <h2>Crear una sesión</h2>
+      <form id="crear" class="fila" novalidate>
+        <div>
+          <label class="campo" for="nuevo-titulo">Título</label>
+          <input id="nuevo-titulo" required placeholder="Consulta sobre…">
+        </div>
+        <div>
+          <label class="campo" for="nuevo-codigo">Código <small>(va en el link: letras, números y guiones)</small></label>
+          <input id="nuevo-codigo" required autocomplete="off" aria-describedby="nuevo-codigo-ayuda crear-msj" placeholder="jornada26">
+        </div>
+        <button class="boton" type="submit">Crear y editar</button>
+      </form>
+      <p class="ayuda" id="nuevo-codigo-ayuda"></p>
+      <p id="crear-msj" role="alert"></p>
+    </section>
+
+    <h2>Sesiones</h2>
+    <p id="lista-msj" role="status"></p>
+    <ul class="sesiones" id="sesiones"></ul>
+
+    <section class="tarjeta" style="margin-top: 2rem">
+      <h2>Personas que pueden administrar</h2>
+      <p class="suave">La cuenta (email y contraseña) se crea en el panel de Supabase: <i>Authentication → Users → Add user</i>. Acá se autoriza el email.</p>
+      <ul class="admins" id="admins"></ul>
+      <form id="agregar-admin" class="fila" novalidate>
+        <div>
+          <label class="campo" for="admin-email">Email a autorizar</label>
+          <input id="admin-email" type="email" required aria-describedby="admins-msj">
+        </div>
+        <button class="boton" type="submit">Autorizar</button>
+      </form>
+      <p id="admins-msj" role="alert"></p>
+    </section>
+  </div>
+
+  <!-- Editor de una sesión -->
+  <div id="editor" hidden>
+    <div class="barra-editor">
+      <button type="button" class="boton boton--secundario" id="volver">← Volver a la lista</button>
+      <h1 id="editor-titulo"></h1>
+      <p><span id="guardar-msj" role="status"></span> <button type="button" class="boton" id="guardar">Guardar</button></p>
+    </div>
+    <div id="errores" class="mensaje mensaje--aviso" role="alert" tabindex="-1" hidden></div>
+    <p class="suave">Los cambios se guardan al tocar <b>Guardar</b>. Si la sesión está en curso, los celulares y la pantalla los reciben al instante.</p>
+
+    <section class="tarjeta">
+      <h2>Datos generales</h2>
+      <label class="campo" for="f-titulo">Título de la sesión</label>
+      <input id="f-titulo" data-ruta="titulo">
+      <label class="campo" for="f-instrucciones">Instrucciones <small>(se muestran al empezar)</small></label>
+      <textarea id="f-instrucciones" data-ruta="instrucciones"></textarea>
+      <label class="campo" for="f-final-titulo">Título del mensaje final <small>(después de "Finalizar")</small></label>
+      <input id="f-final-titulo" data-ruta="final.titulo">
+      <label class="campo" for="f-final-texto">Texto del mensaje final</label>
+      <textarea id="f-final-texto" data-ruta="final.texto"></textarea>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Estética</h2>
+      <div class="estetica">
+        <div id="estetica"></div>
+        <div>
+          <p class="campo">Vista previa</p>
+          <iframe class="vista" id="vista" src="demo/tema.html" title="Vista previa de la estética"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Pasos <small>(en el orden en que se muestran, entre la Bienvenida y el Cierre)</small></h2>
+      <div id="pasos"></div>
+      <div class="tarjeta">
+        <p class="campo">Agregar un paso</p>
+        <p class="acciones" style="margin-top: 0">
+          <button type="button" class="boton boton--secundario" data-accion="agregar-paso" data-tipo="lista">+ Lista de preguntas</button>
+          <button type="button" class="boton boton--secundario" data-accion="agregar-paso" data-tipo="pregunta">+ Pregunta guiada</button>
+          <button type="button" class="boton boton--secundario" data-accion="agregar-paso" data-tipo="registro">+ Registro</button>
+        </p>
+        <p class="ayuda"><b>Lista</b>: cada persona elige qué pregunta responder y vuelve a la lista. <b>Pregunta guiada</b>: una sola pregunta, todos a la vez. <b>Registro</b>: pide datos (nombre, email…); si es obligatorio, tiene que ir primero.</p>
+      </div>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Copiar entre instalaciones</h2>
+      <p class="suave">Descargá la configuración como archivo JSON, o pegá una para reemplazar la de esta sesión (después tocá Guardar).</p>
+      <p class="acciones"><button type="button" class="boton boton--secundario" id="exportar-json">Descargar JSON</button></p>
+      <label class="campo" for="importar-texto">Pegar JSON <small>(o elegí un archivo)</small></label>
+      <textarea id="importar-texto" rows="4" aria-describedby="importar-msj"></textarea>
+      <input type="file" id="importar-archivo" accept=".json,application/json" aria-label="Elegir archivo JSON">
+      <p class="acciones"><button type="button" class="boton boton--secundario" id="importar">Reemplazar con este JSON</button></p>
+      <p id="importar-msj" role="alert"></p>
+    </section>
+  </div>
+</main>
+
+<dialog id="dialogo">
+  <form method="dialog" novalidate>
+    <h2 id="dialogo-titulo"></h2>
+    <p id="dialogo-texto"></p>
+    <label class="campo" for="dialogo-valor" id="dialogo-etiqueta"></label>
+    <input id="dialogo-valor" autocomplete="off" aria-describedby="dialogo-msj">
+    <p id="dialogo-msj" role="alert"></p>
+    <p class="acciones">
+      <button class="boton" value="ok" id="dialogo-ok"></button>
+      <button class="boton boton--secundario" value="cancelar" formnovalidate>Cancelar</button>
+    </p>
+  </form>
+</dialog>
+
+<dialog id="dialogo-qr">
+  <h2>QR para participantes</h2>
+  <div id="qr"></div>
+  <p id="qr-link"></p>
+  <form method="dialog"><button class="boton">Cerrar</button></form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
