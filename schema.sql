@@ -57,7 +57,7 @@ grant select on estado to anon;
 create policy "cualquiera ve el paso" on estado for select to anon using (true);
 
 -- Sin políticas: nadie la lee desde la web. Cambiá la clave por una larga y difícil de adivinar.
-create table clave_presentador (clave text not null);
+create table clave_presentador (clave text primary key);
 alter table clave_presentador enable row level security;
 revoke all on clave_presentador from anon, authenticated;
 insert into clave_presentador values ('CAMBIAR-ESTA-CLAVE');

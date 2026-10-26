@@ -20,7 +20,7 @@ Proyectá en pantalla completa (F11) para que no se vea la clave en la barra de 
 1. **Supabase**: creá un proyecto en supabase.com. Andá a *SQL Editor*, pegá el contenido de `schema.sql` y ejecutalo.
 2. En *Project Settings → API* copiá la **Project URL** y la **anon / publishable key**.
    Pegalas en `CONFIG` al principio del `<script>` de `index.html`. La anon key es pública por diseño: lo que protege los datos son las reglas de `schema.sql`.
-3. En la tabla `clave_presentador` de Supabase (*Table Editor*), reemplazá `CAMBIAR-ESTA-CLAVE` por una clave larga.
+3. Cambiá la clave del presentador. En el *SQL Editor* ejecutá `update clave_presentador set clave = 'tu-clave-larga';`.
 4. En el mismo `CONFIG`, editá el organismo, el evento, las `preguntas` y las `necesidades`.
 5. **GitHub**: creá un repo y subí `index.html`. Después andá a *Settings → Pages → Deploy from a branch → main / root*.
 6. Probalo desde el celular antes del evento. Votá una vez y fijate que aparezca en la pantalla del presentador.
