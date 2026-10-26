@@ -25,3 +25,11 @@ test('armarCsv neutraliza fórmulas', () => {
   assert.equal(fila('+54 11'), "'+54 11");
   assert.equal(fila('-'), "'-");
 });
+test('armarCsv: datos de campos que ya no están en la config van en columnas extra', () => {
+  const csv = armarCsv(cfg(), [], [{ participante: 'p1', datos: { c1: 'Ana', viejo: 'x', otro: 'y' }, creado: 'z' },
+    { participante: 'p2', datos: { otro: 'w' }, creado: 'z' }]);
+  const filas = csv.slice(1).split('\r\n');
+  assert.equal(filas[0], 'fecha,participante,Nombre,viejo,otro,pregunta,opcion,texto');
+  assert.equal(filas[1], 'z,p1,Ana,x,y,,,');
+  assert.equal(filas[2], 'z,p2,,,w,,,');
+});

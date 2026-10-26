@@ -23,7 +23,6 @@
   --principal-suave: color-mix(in srgb, var(--color-principal) 10%, var(--superficie));
   --acento-suave: color-mix(in srgb, var(--color-acento) 12%, var(--superficie));
   --exito-suave: color-mix(in srgb, var(--exito) 10%, var(--superficie));
-  --error-suave: color-mix(in srgb, var(--error) 8%, var(--superficie));
   --aviso-suave: color-mix(in srgb, var(--aviso) 12%, var(--superficie));
   /* Acento usado como texto sobre fondo claro: oscurecido para que un acento claro (amarillo) siga legible */
   --acento-texto: color-mix(in srgb, var(--color-acento) 45%, var(--texto));

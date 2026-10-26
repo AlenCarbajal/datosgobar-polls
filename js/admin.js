@@ -88,7 +88,7 @@ $('#entrar').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const email = $('#email'), clave = $('#clave'), msj = $('#entrar-msj'), b = ev.submitter;
   email.removeAttribute('aria-invalid'); clave.removeAttribute('aria-invalid'); msj.textContent = '';
-  if (!email.checkValidity()) return invalido(email, msj, 'Escribí tu email (por ejemplo, nombre@organismo.gob.ar).');
+  if (!email.checkValidity()) return invalido(email, msj, 'Escribí tu email (por ejemplo, nombre@ejemplo.org).');
   if (!clave.value) return invalido(clave, msj, 'Escribí tu contraseña.');
   b.disabled = true;
   try {
@@ -343,7 +343,7 @@ function pintarEstetica(foco) {
     <p class="ayuda" id="e-preset-ayuda">Cada estilo trae sus colores, letra y logo. Lo que cambies abajo tiene prioridad; un campo vacío usa lo del estilo.</p>
     ${texto('organismo', 'Nombre de la organización', 'Se muestra si no hay logo.')}
     ${texto('logo', 'Logo (dirección de la imagen)', 'Una dirección https://… o un archivo del sitio, como img/logo.png. Conviene claro: va sobre el color principal.')}
-    ${texto('encabezado', 'Texto del encabezado', 'Por ejemplo, el nombre del evento.')}
+    ${texto('encabezado', 'Texto del encabezado', 'Por ejemplo, el nombre de la actividad.')}
     ${color('colorPrincipal', 'Color principal (encabezado)')}
     ${color('colorAcento', 'Color de acento (botones y barras)')}
     <div id="avisos-contraste" role="status"></div>

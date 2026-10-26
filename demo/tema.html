@@ -11,7 +11,7 @@
 <header class="encabezado">
   <div class="encabezado__interior">
     <span id="marca" class="encabezado__organismo">Mi organismo</span>
-    <span id="evento">Jornada de prueba</span>
+    <span id="evento">Sesión de prueba</span>
   </div>
   <div class="mosaico" aria-hidden="true"><span>≠</span><span>á</span><span>↑</span><span>@</span><span>≥</span><span>π</span><span>»</span></div>
 </header>
@@ -63,12 +63,12 @@ function pintar(estetica) {
     : Object.assign(document.createElement('span'), { className: 'encabezado__organismo', textContent: nombre });
   marca.id = 'marca';
   document.getElementById('marca').replaceWith(marca);
-  document.getElementById('evento').textContent = e.encabezado || 'Jornada de prueba';
+  document.getElementById('evento').textContent = e.encabezado || 'Sesión de prueba';
 }
 const q = new URLSearchParams(location.search);
 const color = k => q.get(k) && (q.get(k).startsWith('#') ? q.get(k) : '#' + q.get(k));
 pintar({ preset: q.get('preset'), colorPrincipal: color('colorPrincipal'), colorAcento: color('colorAcento') });
-addEventListener('message', (ev) => { if (ev.origin === location.origin && ev.data?.estetica) pintar(ev.data.estetica); });
+addEventListener('message', (ev) => { if (ev.origin === location.origin && ev.source === parent && ev.data?.estetica) pintar(ev.data.estetica); });
 </script>
 </body>
 </html>

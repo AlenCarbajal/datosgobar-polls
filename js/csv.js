@@ -8,9 +8,11 @@ const celda = (v) => {
 
 export function armarCsv(config, respuestas, inscripciones) {
   const campos = config.pasos.filter(p => p.tipo === 'registro').flatMap(p => p.campos || []);
+  const conocidos = new Set(campos.map(c => c.id)), viejos = []; // datos de campos que ya no están en la config
+  for (const i of inscripciones) for (const k of Object.keys(i.datos || {})) if (!conocidos.has(k)) { conocidos.add(k); viejos.push(k); }
   const porPart = new Map(inscripciones.map(i => [i.participante, i]));
-  const reg = (i) => campos.map(c => i?.datos?.[c.id] ?? '');
-  const filas = [['fecha', 'participante', ...campos.map(c => c.etiqueta), 'pregunta', 'opcion', 'texto']];
+  const reg = (i) => [...campos.map(c => c.id), ...viejos].map(k => i?.datos?.[k] ?? '');
+  const filas = [['fecha', 'participante', ...campos.map(c => c.etiqueta), ...viejos, 'pregunta', 'opcion', 'texto']];
   for (const r of respuestas) {
     const pregunta = buscarPregunta(config, r.pregunta_id)?.pregunta.texto ?? '';
     const opcion = opcionesDe(config, r.pregunta_id).find(o => o.id === r.opcion_id)?.texto ?? '';

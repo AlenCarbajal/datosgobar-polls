@@ -47,7 +47,7 @@ flowchart TD
 
 ### 1. Copiar el repositorio
 
-1. Abrí el repositorio en GitHub.
+1. Abrí el repositorio original en GitHub (`<URL del repositorio original>`).
 2. Tocá **Use this template** → **Create a new repository**. Si ese botón no aparece, tocá **Fork**.
 3. Elegí tu cuenta como dueña y un nombre para el repositorio. Dejalo **Public**.
 4. Tocá **Create repository** (o **Create fork**).
@@ -177,9 +177,9 @@ Deberías ver la sesión en el celular y, en la pantalla, los botones **← Ante
 
 El script prueba con la publishable key lo que una persona sin cuenta no debería poder hacer. No deja datos guardados.
 
-Necesita `bash`, `curl`, `jq` y `uuidgen`, y una sesión activa con una opción que pida texto obligatorio. La sesión `prueba` del paso 10 cumple eso.
+Necesita `bash`, `curl`, `jq` y `uuidgen` (en macOS vienen incluidos, salvo `jq`: `brew install jq`; en Debian/Ubuntu: `sudo apt install jq uuid-runtime`), y una sesión activa con una opción que pida texto obligatorio. La sesión `prueba` del paso 10 cumple eso.
 
-1. En una terminal, dentro de una copia local del repositorio, ejecutá:
+1. Para tener una copia local, ejecutá `git clone <URL de tu repositorio>` y entrá a la carpeta. Ahí ejecutá:
 
    ```sh
    bash herramientas/verificar-seguridad.sh https://TU-PROYECTO.supabase.co sb_publishable_… prueba

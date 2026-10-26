@@ -113,7 +113,7 @@ function ajustarGrilla() {
 }
 
 // Con respuestas nuevas: en la bienvenida solo cambia el contador; el resto se redibuja.
-const pintar = () => { if (!['inicio', 'final'].includes(pasoActual())) dibujar(); };
+const pintar = () => { if (sesion && !['inicio', 'final'].includes(pasoActual())) dibujar(); };
 
 // ---------- Controles ----------
 function controles() {
@@ -133,20 +133,32 @@ function mostrarControles() {
 
 function ver(paso) { sesion = { ...sesion, paso }; detalle = null; dibujar(); }
 
+// Escrituras en cola: una a la vez y, si mientras tanto se pulsó de nuevo, solo el último destino.
+let destino = null, escribiendo = false, confirmado;
 async function mover(delta) {
+  if (!sesion) return;
   const pasos = pasosDeSesion(sesion.config), anterior = pasoActual();
   const nuevo = pasos[Math.min(pasos.length - 1, Math.max(0, pasos.indexOf(anterior) + delta))];
   if (nuevo === anterior) return;
-  enCurso++;
+  if (!escribiendo) confirmado = anterior;
+  destino = nuevo;
   ver(nuevo);
-  try {
-    await api.cambiarPaso(sesion.id, nuevo);
-    estado('');
-    if (pasoDe(nuevo)?.tipo === 'registro') refrescar(); // traer el total de inscriptos ya
-  } catch {
-    if (pasoActual() === nuevo) ver(anterior);
-    estado('No se pudo cambiar el paso. Revisá la conexión y que sigas con la sesión iniciada en el formulario.');
+  if (escribiendo) return;
+  escribiendo = true; enCurso++;
+  const id = sesion.id;
+  while (destino !== null && sesion) {
+    const n = destino; destino = null;
+    try {
+      await api.cambiarPaso(id, n);
+      confirmado = n;
+      estado('');
+      if (sesion && pasoDe(n)?.tipo === 'registro') refrescar(); // traer el total de inscriptos ya
+    } catch {
+      if (sesion && destino === null && pasoActual() === n) ver(confirmado);
+      estado('No se pudo cambiar el paso. Revisá la conexión y que sigas con la sesión iniciada en el formulario.');
+    }
   }
+  destino = null; escribiendo = false;
   if (--enCurso === 0) ultimoCambio = Date.now();
 }
 
@@ -160,6 +172,7 @@ function activarControles() {
   addEventListener('mousemove', mostrarControles);
   // Flechas, AvPág/RePág y barra espaciadora: funcionan con un control remoto de presentaciones.
   addEventListener('keydown', e => {
+    if (e.repeat) return;
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.key === ' ' && e.target.closest?.('button')) return; // con teclado, espacio activa el botón con foco
     if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); mover(1); }
@@ -177,6 +190,7 @@ function recibir(s, inicio) {
     escena.innerHTML = '<div class="grande"><h1>Esta sesión ya no está disponible</h1></div>';
     return;
   }
+  if (!sesion) return; // se archivó y ya no hay nada que mostrar
   if (enCurso || inicio <= ultimoCambio) s = { ...s, paso: sesion.paso }; // lectura vieja: el paso local manda
   const reinicio = s.ronda !== sesion.ronda, tema = JSON.stringify(s.config.estetica) !== JSON.stringify(sesion.config.estetica);
   if (s.paso !== sesion.paso) detalle = null;
@@ -193,7 +207,8 @@ async function refrescar() {
   try {
     const [s, rs] = await Promise.all([api.sesionPorCodigo(codigo), api.respuestas(id)]);
     if (!sesion) return;
-    respuestas = rs;
+    // Una respuesta que llegó por Realtime durante la lectura no se pierde; si hubo reinicio (otra ronda), manda la lista nueva.
+    respuestas = s && s.ronda !== sesion.ronda ? rs : [...new Map([...respuestas, ...rs].map(r => [r.id, r])).values()];
     if (pasoDe(s?.paso)?.tipo === 'registro' || pasoDe(pasoActual())?.tipo === 'registro')
       inscriptos = (await api.resumenInscripciones(id).catch(() => null))?.total ?? inscriptos; // si falla, que no corte lo demás
     recibir(s, inicio);
@@ -206,6 +221,7 @@ async function refrescar() {
 }
 
 function alRespuesta(r) {
+  if (!sesion) return;
   if (!r) return refrescar(); // demo: avisa sin la fila
   if (respuestas.some(x => x.id === r.id)) return;
   respuestas.push(r);
@@ -253,7 +269,7 @@ try {
       const b = e.target.closest('[data-detalle]');
       if (b) { detalle = b.dataset.detalle || null; dibujar(); }
     });
-    addEventListener('keydown', e => { if (e.key === 'Escape' && detalle) { detalle = null; dibujar(); } });
+    addEventListener('keydown', e => { if (e.key === 'Escape' && sesion && detalle) { detalle = null; dibujar(); } });
     addEventListener('resize', ajustarGrilla);
     api.escuchar(sesion.id, { alSesion: s => recibir(s, Date.now()), alRespuesta, alPresentes, comoPantalla: true });
     refrescar();

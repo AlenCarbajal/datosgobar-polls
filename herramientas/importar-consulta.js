@@ -27,8 +27,7 @@ pasos.push({
 console.log(JSON.stringify({
   titulo: c.titulo, instrucciones: c.instrucciones,
   estetica: {
-    preset: 'datos-gob-ar', organismo: 'datos.gob.ar', logo: 'img/logo-datos-gob-ar-blanco.png', encabezado: '',
-    colorPrincipal: '#232D4F', colorAcento: '#393793', tipografia: 'Montserrat', esquinas: 'suaves', firma: true,
+    preset: 'datos-gob-ar', organismo: 'datos.gob.ar', logo: 'img/logo-datos-gob-ar-blanco.png',
   },
   pasos, final: { titulo: '¡Gracias por participar!', texto: '' },
 }, null, 2));
