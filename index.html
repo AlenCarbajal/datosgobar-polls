@@ -68,6 +68,9 @@
   .barra div { transition: width .5s; }
   .ley { display: flex; gap: 18px; font-size: 14px; flex-wrap: wrap; }
   .ley i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+  .temas { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 16px; }
+  .temas li { background: var(--tile); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 500; }
+  button.omitir { background: #fff; color: var(--navy); border: 2px solid var(--borde); margin-left: 6px; }
   .coment { border-left: 3px solid var(--violeta); background: #F6F4FC; padding: 6px 10px; margin: 8px 0 0; font-size: 15px; }
   .nec { display: grid; grid-template-columns: 180px 1fr 40px; gap: 10px; align-items: center; margin: 8px 0; font-size: 15px; }
   .nec .barra { margin: 0; }
@@ -92,17 +95,31 @@ const CONFIG = {
   organismo: 'datos.gob.ar',
   logo: '', // ej. 'logo-datosgobar.svg' (versión blanca, junto a index.html) — vacío = se muestra el nombre como texto
   evento: 'Jornada de Datos Abiertos 2026',
-  titulo: 'Tu opinión cuenta',
+  titulo: 'Consulta sobre supertemas y temas asociados',
+  instrucciones: 'En cada pregunta revisá los temas asociados al supertema y votá una opción.',
+  // Cada pregunta es un supertema. No cambies los id una vez que empezó la votación: los votos quedan atados a ellos.
   preguntas: [
-    { id: 'p1', texto: '¿Estás de acuerdo con publicar los datos de compras públicas en formato abierto?' },
-    { id: 'p2', texto: '¿Deberíamos unificar los catálogos de datos de todos los organismos en un único portal?' },
+    { id: 's1', texto: 'Población y sociedad', temas: ['Género y diversidad sexual', 'Discapacidad', 'Culto y religión', 'Demografía y población', 'Pueblos originarios', 'Migración y naturalización', 'Condiciones habitacionales', 'Pobreza y desigualdad'] },
+    { id: 's2', texto: 'Medio ambiente', temas: ['Contaminación y calidad ambiental', 'Residuos y basurales', 'Sustentabilidad', 'Biodiversidad y recursos naturales', 'Áreas protegidas', 'Suelo y degradación de tierras', 'Meteorología'] },
+    { id: 's3', texto: 'Economía y finanzas', temas: ['Infraestructura y obras públicas', 'Prestaciones sociales', 'Presupuesto', 'Cuentas nacionales', 'Precios', 'Sector primario', 'Sector secundario', 'Sector terciario', 'Comercio exterior', 'Mercado laboral e ingresos', 'Deuda pública', 'Mercado financiero'] },
+    { id: 's4', texto: 'Transporte', temas: ['Transporte público urbano', 'Aviación y aeropuertos', 'Transporte marítimo, fluvial y puertos', 'Ferrocarriles'] },
+    { id: 's5', texto: 'Energía', temas: ['Hidrocarburos y combustibles fósiles', 'Energía eléctrica', 'Energía hidroeléctrica', 'Energías renovables'] },
+    { id: 's6', texto: 'Justicia y seguridad', temas: ['Estadísticas criminales', 'Canales y líneas de denuncia', 'Trámites y registro automotor', 'Servicio penitenciario', 'Centros y tribunales de justicia', 'Administración de la justicia', 'Derechos humanos', 'Violencia de género', 'Elecciones'] },
+    { id: 's7', texto: 'Gobierno y sector público', temas: ['Compras y contrataciones', 'Rendición de cuentas', 'Personal del Estado', 'Inmuebles del Estado', 'Gobierno abierto'] },
+    { id: 's8', texto: 'Agroganadería, pesca y forestación', temas: ['Lácteos', 'Agricultura', 'Ganadería', 'Pesca', 'Vitivinicultura', 'Apicultura', 'Horticultura', 'Agroindustria'] },
+    { id: 's9', texto: 'Salud', temas: ['Medicamentos', 'Vigilancia epidemiológica', 'Vacunación', 'Estadísticas vitales', 'Recursos humanos en salud', 'Salud sexual y reproductiva', 'Obras sociales y prepagas', 'Establecimientos de salud', 'Especialidades y tratamientos médicos', 'Trasplantes y donaciones', 'Adicciones y consumo problemático'] },
+    { id: 's10', texto: 'Educación, cultura y deportes', temas: ['Educación', 'Evaluación educativa', 'Cultura', 'Deportes'] },
+    { id: 's11', texto: 'Ciencia y tecnología', temas: ['Acceso y uso de TIC', 'Ciencia e investigación', 'Infraestructura digital'] },
+    { id: 's12', texto: 'Territorio', temas: ['División territorial', 'Ecosistemas', 'Geología', 'Hidrografía'] },
+    { id: 's13', texto: 'Asuntos Internacionales', temas: ['Diplomacia'] },
+    { id: 's14', texto: 'Defensa', temas: ['Fuerzas Armada', 'Soberanía'] },
   ],
   necesidades: ['Asistencia técnica', 'Capacitación', 'Publicación de datos', 'Normalización de datos', 'Uso de APIs', 'Otro'],
 };
 // ======================================================
 
 const DEMO = !CONFIG.supabaseUrl;
-const OPCIONES = { favor: 'A favor', contra: 'En contra', comentario: 'Solo comentar' };
+const OPCIONES = { favor: 'Ok', contra: 'No', comentario: 'Comentar' };
 const PASOS = ['inicio', ...CONFIG.preguntas.map(p => p.id), 'registro', 'fin'];
 const URL_PARTICIPAR = location.href.split('#')[0];
 const $ = s => document.querySelector(s);
@@ -175,7 +192,7 @@ function vistaParticipante(paso) {
     p ? formPregunta(p) :
     paso === 'registro' ? formRegistro() :
     paso === 'fin' ? espera('¡Gracias por participar!', 'Ya podés cerrar esta página.') :
-    espera('Ya estás adentro', 'Cuando empiece la presentación vas a ver acá cada pregunta. No hace falta recargar.'));
+    espera('Ya estás adentro', `${esc(CONFIG.instrucciones)} Cuando empiece la presentación vas a ver acá cada pregunta, sin recargar.`));
   conectarFormularios();
 }
 
@@ -183,14 +200,17 @@ const formPregunta = p => `
   <p class="num">${nombrePaso(p.id)}</p>
   <form class="card" data-pregunta="${esc(p.id)}" novalidate>
     <h2>${esc(p.texto)}</h2>
+    ${listaTemas(p)}
     ${localStorage.getItem('votado:' + p.id) ? hecho('Ya registramos tu respuesta. Mirá la pantalla para ver los resultados.') : `
-    <fieldset><legend>Tu posición</legend><div class="opciones">
+    <fieldset><legend>Tu opinión sobre este supertema y sus temas</legend><div class="opciones">
       ${Object.entries(OPCIONES).map(([v, t]) => `<label class="opcion"><input type="radio" name="opcion" value="${v}"><span>${t}</span></label>`).join('')}
     </div></fieldset>
-    <label class="campo" for="c-${esc(p.id)}">Comentario <small>(opcional si votás)</small></label>
+    <label class="campo" for="c-${esc(p.id)}">Comentario <small>(opcional si elegís Ok o No)</small></label>
     <textarea id="c-${esc(p.id)}" name="comentario" maxlength="1000"></textarea>
-    <button type="submit">Enviar respuesta</button><p class="msg" role="status"></p>`}
+    <button type="submit">Enviar respuesta</button> <button type="button" class="omitir">Omitir</button><p class="msg" role="status"></p>`}
   </form>`;
+
+const listaTemas = p => p.temas?.length ? `<ul class="temas">${p.temas.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
 
 const formRegistro = () => `
   <p class="num">Registro de necesidades</p>
@@ -228,6 +248,12 @@ function conectarFormularios() {
     }
     localStorage.setItem('votado:' + id, '1'); // 409 = ya había votado: lo tratamos como hecho
     form.innerHTML = `<h2>${esc(pregunta(id).texto)}</h2>` + hecho('¡Gracias! Mirá la pantalla para ver los resultados.');
+  };
+  // ponytail: "Omitir" no se guarda en la base, solo cierra la pregunta en este celular.
+  const omitir = form?.querySelector('.omitir');
+  if (omitir) omitir.onclick = () => {
+    localStorage.setItem('votado:' + form.dataset.pregunta, '1');
+    form.innerHTML = `<h2>${esc(pregunta(form.dataset.pregunta).texto)}</h2>` + hecho('Omitiste esta pregunta. Esperá la siguiente.');
   };
 
   const reg = $('#registro');
@@ -305,7 +331,7 @@ function escena(paso) {
   $('#paso-nombre').textContent = nombrePaso(paso);
   const url = esc(URL_PARTICIPAR.replace(/^https?:\/\//, ''));
   $('#escena').innerHTML = paso === 'inicio'
-    ? `<div class="bienvenida"><div id="qr"></div><div><p class="num">Sumate desde tu celular</p><h1>Escaneá el código<br>o entrá a</h1><p class="url">${url}</p></div></div>`
+    ? `<div class="bienvenida"><div id="qr"></div><div><p class="num">${esc(CONFIG.titulo)}</p><h1>Sumate desde tu celular:<br>escaneá el código o entrá a</h1><p class="url">${url}</p></div></div>`
     : `<div class="grilla"><aside class="qr"><p><b>Sumate desde tu celular</b></p><div id="qr"></div><p>${url}</p></aside><div id="resultados"></div></div>`;
   const lado = paso === 'inicio' ? 320 : 200;
   if (window.QRCode) new QRCode($('#qr'), { text: URL_PARTICIPAR, width: lado, height: lado, colorDark: '#232D4F' });
@@ -326,9 +352,10 @@ function tarjetaPregunta(p) {
   const total = favor + contra, pct = total ? Math.round(favor / total * 100) : 0;
   const comentarios = vs.filter(v => v.comentario);
   return `<div class="card"><h2>${esc(p.texto)}</h2>
-    <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>a favor · ${vs.length} respuestas</span></div>
+    ${pasoActual === p.id ? listaTemas(p) : ''}
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>${OPCIONES.favor} · ${vs.length} respuestas</span></div>
     <div class="barra"><div style="width:${total ? pct : 0}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>
-    <div class="ley"><span><i style="background:var(--indigo)"></i>A favor ${favor}</span><span><i style="background:var(--violeta)"></i>En contra ${contra}</span><span>Comentarios ${comentarios.length}</span></div>
+    <div class="ley"><span><i style="background:var(--indigo)"></i>${OPCIONES.favor} ${favor}</span><span><i style="background:var(--violeta)"></i>${OPCIONES.contra} ${contra}</span><span>Comentarios ${comentarios.length}</span></div>
     ${comentarios.slice(0, 4).map(c => `<p class="coment">“${esc(c.comentario)}”</p>`).join('')}
   </div>`;
 }
