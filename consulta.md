@@ -119,3 +119,9 @@ En cada pregunta revisá los temas asociados al supertema y votá una opción.
 - Normalización de datos
 - Uso de APIs
 - Otro
+
+### Tus datos
+- Nombre *
+- Apellido *
+- Email *
+- Organismo *

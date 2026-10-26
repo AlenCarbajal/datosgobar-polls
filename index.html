@@ -128,11 +128,12 @@ const api = {
   votar: async v => DEMO ? guardarDemo('votos', v) : ok(await sb.from('votos').insert(v)),
   registrar: async r => DEMO ? guardarDemo('registros', r) : ok(await sb.from('registros').insert(r)),
   votos: async () => DEMO ? leer('votos') : ok(await sb.from('votos').select('id,pregunta,opcion,comentario').order('creado', { ascending: false })),
-  necesidades: async () => {
-    if (!DEMO) return ok(await sb.rpc('conteo_necesidades'));
-    const c = {};
-    leer('registros').forEach(r => r.necesidades.forEach(n => c[n] = (c[n] || 0) + 1));
-    return Object.entries(c).map(([necesidad, total]) => ({ necesidad, total })).sort((a, b) => b.total - a.total);
+  // Solo totales: los datos personales del registro no se pueden leer desde la web.
+  resumenRegistros: async () => {
+    if (!DEMO) return ok(await sb.rpc('resumen_registros'));
+    const regs = leer('registros'), c = {};
+    regs.forEach(r => r.necesidades.forEach(n => c[n] = (c[n] || 0) + 1));
+    return { total: regs.length, necesidades: Object.entries(c).map(([necesidad, total]) => ({ necesidad, total })).sort((a, b) => b.total - a.total) };
   },
   paso: async () => valido(DEMO ? localStorage.getItem('paso') : ok(await sb.from('estado').select('paso').eq('id', 1).single()).paso),
   cambiarPaso: async (clave, paso) => DEMO ? localStorage.setItem('paso', paso) : ok(await sb.rpc('cambiar_paso', { p_clave: clave, p_paso: paso })),
@@ -155,12 +156,12 @@ const api = {
 
 // ---------- Estado compartido de las vistas ----------
 let C;            // la consulta leída de consulta.md
-let PASOS;        // inicio → preguntas → registro → fin
+let PASOS;        // inicio → preguntas y registro en el orden de consulta.md → fin
 let pasoActual, timer;
 const valido = paso => PASOS.includes(paso) ? paso : 'inicio'; // p. ej. una pregunta que se renombró en consulta.md
 const pregunta = id => C.preguntas.find(p => p.id === id);
 const nombrePaso = paso =>
-  paso === 'inicio' ? 'Bienvenida' : paso === 'registro' ? 'Registro de necesidades' : paso === 'fin' ? 'Cierre' :
+  paso === 'inicio' ? 'Bienvenida' : paso === 'registro' ? 'Registro' : paso === 'fin' ? 'Cierre' :
   `Pregunta ${C.preguntas.findIndex(p => p.id === paso) + 1} de ${C.preguntas.length}`;
 const listaTemas = p => p.temas.length ? `<ul class="temas">${p.temas.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
 const hecho = texto => `<p class="hecho"><span aria-hidden="true">✓</span> ${texto}</p>`;
@@ -206,25 +207,28 @@ const formPregunta = p => `
     <p class="msg" role="status"></p>`}
   </form>`;
 
-const formRegistro = () => `
-  <p class="num">Registro de necesidades</p>
+// Para que el celular ofrezca autocompletar con los datos guardados de la persona.
+const AUTOCOMPLETAR = [[/mail/i, 'email'], [/apellido/i, 'family-name'], [/nombre/i, 'given-name'], [/tel[eé]fono|celular/i, 'tel'], [/organismo|organizaci|empresa|instituci/i, 'organization']];
+const autocompletar = nombre => AUTOCOMPLETAR.find(([re]) => re.test(nombre))?.[1] || 'on';
+
+const formRegistro = () => {
+  const { titulo, opciones, tituloCampos, campos } = C.registro;
+  return `
+  <p class="num">Registro</p>
   <form class="card" id="registro" novalidate>
-    ${localStorage.getItem('registrado') ? hecho('Recibimos tu registro. Nos vamos a poner en contacto.') : `
-    <h2>${esc(C.registro.titulo)}</h2>
-    <fieldset><legend>Elegí una o más opciones</legend><div class="chips">
-      ${C.registro.opciones.map(n => `<label class="chip"><input type="checkbox" name="necesidad" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
-    </div></fieldset>
-    <label class="campo" for="organismo">Organismo</label>
-    <input type="text" id="organismo" name="organismo" maxlength="200" autocomplete="organization">
-    <label class="campo" for="nombre">Nombre <small>(opcional)</small></label>
-    <input type="text" id="nombre" name="nombre" maxlength="200" autocomplete="name">
-    <label class="campo" for="email">Email de contacto <small>(opcional)</small></label>
-    <input type="email" id="email" name="email" maxlength="200" autocomplete="email">
-    <label class="campo" for="detalle">Contanos más <small>(opcional)</small></label>
-    <textarea id="detalle" name="detalle" maxlength="2000"></textarea>
+    ${localStorage.getItem('registrado') ? hecho('Recibimos tu registro. ¡Gracias!') : `
+    <h2>${esc(titulo)}</h2>
+    ${opciones.length ? `<fieldset><legend>Elegí una o más opciones</legend><div class="chips">
+      ${opciones.map(n => `<label class="chip"><input type="checkbox" name="opcion" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
+    </div></fieldset>` : ''}
+    ${tituloCampos ? `<p class="num" style="margin-top:20px">${esc(tituloCampos)}</p>` : ''}
+    ${campos.map((c, i) => `
+      <label class="campo" for="campo-${i}">${esc(c.nombre)}${c.obligatorio ? '' : ' <small>(opcional)</small>'}</label>
+      <input type="${c.tipo}" id="campo-${i}" name="campo-${i}" maxlength="200" autocomplete="${autocompletar(c.nombre)}">`).join('')}
     <button type="submit">Registrar</button>
     <p class="msg" role="status"></p>`}
   </form>`;
+};
 
 function conectarFormularios() {
   const form = $('form[data-pregunta]');
@@ -250,23 +254,26 @@ function conectarFormularios() {
   const reg = $('#registro');
   if (reg?.querySelector('button')) reg.onsubmit = async e => {
     e.preventDefault();
-    const d = new FormData(reg), msg = reg.querySelector('.msg'), necesidades = d.getAll('necesidad');
-    const opcional = k => d.get(k).trim() || null;
-    const fila = { necesidades, organismo: d.get('organismo').trim(), nombre: opcional('nombre'), email: opcional('email'), detalle: opcional('detalle') };
-    if (!necesidades.length) return mensaje(msg, 'Elegí al menos una opción.');
-    if (!fila.organismo) return mensaje(msg, 'Indicá tu organismo.');
-    if (fila.email && !reg.email.checkValidity()) return mensaje(msg, 'Revisá el email: parece incompleto.');
+    const msg = reg.querySelector('.msg'), necesidades = new FormData(reg).getAll('opcion');
+    if (C.registro.opciones.length && !necesidades.length) return mensaje(msg, 'Elegí al menos una opción.');
+    const datos = {};
+    for (const [i, c] of C.registro.campos.entries()) {
+      const input = reg[`campo-${i}`], valor = input.value.trim();
+      if (c.obligatorio && !valor) { input.focus(); return mensaje(msg, `Completá ${c.nombre}.`); }
+      if (valor && !input.checkValidity()) { input.focus(); return mensaje(msg, `Revisá ${c.nombre}: parece incompleto.`); }
+      if (valor) datos[c.nombre] = valor;
+    }
     reg.querySelector('button').disabled = true;
-    try { await api.registrar(fila); }
+    try { await api.registrar({ necesidades, datos }); }
     catch { reg.querySelector('button').disabled = false; return mensaje(msg, 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
     localStorage.setItem('registrado', '1');
-    reg.innerHTML = hecho('Recibimos tu registro. Nos vamos a poner en contacto.');
+    reg.innerHTML = hecho('Recibimos tu registro. ¡Gracias!');
   };
 }
 
 // ---------- Presentador: #pantalla/CLAVE ----------
 const clave = decodeURIComponent(location.hash.split('/')[1] || '');
-let votos = [], necesidades = [], presentes = null;
+let votos = [], registros = { total: 0, necesidades: [] }, presentes = null;
 let ultimoCambio = 0; // una lectura que salió antes de terminar un cambio de paso trae el paso viejo: se ignora
 
 function pantalla() {
@@ -301,13 +308,13 @@ function pantalla() {
   refrescar();
 }
 
-// Lectura completa: al abrir y como respaldo de Realtime. Las necesidades no tienen aviso en vivo (son datos privados).
+// Lectura completa: al abrir y como respaldo de Realtime. Los registros no tienen aviso en vivo (son datos privados).
 async function refrescar() {
   clearTimeout(timer);
   const inicio = Date.now();
   try {
-    const [paso, v, n] = await Promise.all([api.paso(), api.votos(), api.necesidades()]);
-    votos = v; necesidades = n;
+    const [paso, v, r] = await Promise.all([api.paso(), api.votos(), api.resumenRegistros().catch(() => registros)]); // si falla el resumen, que no corte los votos
+    votos = v; registros = r;
     if (paso !== pasoActual && inicio > ultimoCambio) escena(paso); else pintar();
     if ($('.controles .msg').classList.contains('error')) mensaje($('.controles .msg'), '', false);
   } catch {
@@ -324,7 +331,7 @@ async function mover(delta) {
   escena(nuevo);
   try {
     await api.cambiarPaso(clave, nuevo);
-    if (['registro', 'fin'].includes(nuevo)) refrescar(); // traer los totales de necesidades ya
+    if (['registro', 'fin'].includes(nuevo)) refrescar(); // traer los totales del registro ya
   } catch {
     escena(anterior);
     mensaje($('.controles .msg'), 'No se pudo cambiar el paso. Revisá la clave en la dirección (#pantalla/TU-CLAVE).');
@@ -352,8 +359,8 @@ function pintar() {
   const el = $('#resultados');
   if (!el) return;
   const p = pregunta(pasoActual);
-  el.innerHTML = p ? tarjetaPregunta(p) : pasoActual === 'registro' ? tarjetaNecesidades()
-    : C.preguntas.map(tarjetaPregunta).join('') + (C.registro ? tarjetaNecesidades() : '');
+  el.innerHTML = p ? tarjetaPregunta(p) : pasoActual === 'registro' ? tarjetaRegistro()
+    : C.preguntas.map(tarjetaPregunta).join('') + (C.registro ? tarjetaRegistro() : '');
 }
 
 function tarjetaPregunta(p) {
@@ -370,11 +377,13 @@ function tarjetaPregunta(p) {
   </div>`;
 }
 
-function tarjetaNecesidades() {
-  const max = Math.max(1, ...necesidades.map(x => x.total));
-  return `<div class="card"><h2>${esc(C.registro.titulo)}</h2>${necesidades.length ? necesidades.map(x => `
-    <div class="nec"><span>${esc(x.necesidad)}</span><div class="barra"><div style="width:${x.total / max * 100}%;background:var(--navy)"></div></div><b>${x.total}</b></div>`).join('')
-    : '<p style="margin:0">Todavía no hay registros.</p>'}</div>`;
+function tarjetaRegistro() {
+  const { total, necesidades } = registros, max = Math.max(1, ...necesidades.map(x => x.total));
+  return `<div class="card"><h2>${esc(C.registro.titulo)}</h2>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px"><span class="grande">${total}</span><span>${total === 1 ? 'persona registrada' : 'personas registradas'}</span></div>
+    ${necesidades.map(x => `
+    <div class="nec"><span>${esc(x.necesidad)}</span><div class="barra"><div style="width:${x.total / max * 100}%;background:var(--navy)"></div></div><b>${x.total}</b></div>`).join('')}
+  </div>`;
 }
 
 // ---------- Arranque ----------
@@ -385,7 +394,7 @@ try {
   const r = await fetch('consulta.md', { cache: 'no-cache' });
   if (!r.ok) throw new Error();
   C = leerConsulta(await r.text());
-  PASOS = ['inicio', ...C.preguntas.map(p => p.id), ...(C.registro ? ['registro'] : []), 'fin'];
+  PASOS = ['inicio', ...C.pasos, 'fin'];
   location.hash.startsWith('#pantalla') ? pantalla() : participante();
 } catch {
   $('#app').innerHTML = espera('No pudimos cargar la consulta', 'Recargá la página en unos segundos.');

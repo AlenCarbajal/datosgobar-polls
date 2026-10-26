@@ -24,12 +24,21 @@ Instrucciones para los participantes (una o más líneas).
 ## Registro: ¿Qué necesita tu organismo de nosotros?
 - Asistencia técnica
 - Capacitación
+
+### Tus datos
+- Nombre *
+- Apellido *
+- Email *
+- Organismo *
+- Teléfono
 ```
 
 - `#` es el título; las líneas sueltas debajo, las instrucciones.
 - Cada `##` es un paso de la presentación. Se vota con **Ok / No / Comentar / Omitir**.
 - Los `-` debajo de una pregunta son sus temas, que se muestran como etiquetas.
-- `## Registro: ...` es el formulario de necesidades: el texto después de `Registro:` es la pregunta y los `-` son las opciones. Si no ponés esta sección, no hay registro.
+- `## Registro: ...` es el formulario de registro. El texto después de `Registro:` es el título y los `-` son opciones para marcar (si no hay, no se muestran).
+- `### ...` dentro del registro empieza la lista de **datos a pedir**: cada `-` es un campo. Con `*` al final es obligatorio. Si el nombre incluye "mail", se valida como email. Los campos cambian según la ocasión sin tocar la base.
+- Los pasos se presentan en el orden del archivo: si querés el registro al principio, ponelo antes de las preguntas.
 
 No renombres una pregunta que ya se votó: los votos quedan atados a su título.
 Para validar el archivo antes de subirlo: `node test.js`.
@@ -64,12 +73,22 @@ Supabase pausa los proyectos gratuitos después de una semana sin actividad. Ent
 
 ## Después del evento
 
-En Supabase, *Table Editor → votos / registros → Export to CSV*.
+- Votos: en Supabase, *Table Editor → votos → Export to CSV*.
+- Registros: los datos de cada persona quedan en la columna `datos`. Para tener una columna por campo, ejecutá algo así en el *SQL Editor* (con los nombres de tus campos) y exportá el resultado a CSV:
+
+```sql
+select creado, array_to_string(necesidades, ', ') as opciones,
+       datos->>'Nombre' as nombre, datos->>'Apellido' as apellido,
+       datos->>'Email' as email, datos->>'Organismo' as organismo
+from registros order by creado;
+```
+
 Los registros incluyen emails, así que no se pueden leer desde la web: solo se ven desde el panel de Supabase.
 
 ## Cómo funciona
 
 - Todo es una página estática (`index.html` + `consulta.js` + `consulta.md`). No hay servidor propio.
+- Si ya tenías la base de una versión anterior, ejecutá los archivos de `migraciones/` que falten.
 - Los cambios de paso y los votos llegan al instante por Supabase Realtime. Si se corta la conexión, la página vuelve a consultar sola: los celulares cada 10 segundos y la pantalla cada 15. En los pasos de registro y cierre, la pantalla consulta cada 3 segundos, porque los registros no tienen aviso en vivo: son datos privados.
 
 ## Límites conocidos
