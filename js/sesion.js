@@ -21,8 +21,8 @@ export const pasosDeSesion = (config) => ['inicio', ...config.pasos.map(p => p.i
 function preguntasDe(config) {
   const out = [];
   for (const paso of config.pasos) {
-    if (paso.tipo === 'lista') for (const pregunta of paso.preguntas || []) out.push({ pregunta, paso });
-    else if (paso.tipo === 'pregunta') out.push({ pregunta: paso.pregunta, paso });
+    if (paso.tipo === 'lista') { for (const pregunta of paso.preguntas || []) if (pregunta) out.push({ pregunta, paso }); }
+    else if (paso.tipo === 'pregunta' && paso.pregunta) out.push({ pregunta: paso.pregunta, paso });
   }
   return out;
 }
@@ -33,17 +33,18 @@ export const buscarPregunta = (config, preguntaId) =>
 export const opcionesDe = (config, preguntaId) => buscarPregunta(config, preguntaId)?.paso.opciones || [];
 
 export function validarConfig(config) {
+  if (!config || typeof config !== 'object') return ['La configuración de la sesión está vacía o dañada.'];
   const err = [];
-  if (!config.titulo?.trim()) err.push('Falta el título de la sesión.');
-  if (!config.final?.titulo?.trim()) err.push('Falta el título del mensaje final.');
-  if (!config.pasos?.length) err.push('La sesión necesita al menos un paso.');
+  if (typeof config.titulo !== 'string' || !config.titulo.trim()) err.push('Falta el título de la sesión.');
+  if (typeof config.final?.titulo !== 'string' || !config.final.titulo.trim()) err.push('Falta el título del mensaje final.');
+  if (!Array.isArray(config.pasos) || !config.pasos.length) err.push('La sesión necesita al menos un paso.');
   const vistos = new Set();
   const id = (x) => { if (vistos.has(x)) err.push(`Hay un id repetido: ${x}.`); vistos.add(x); };
   const opciones = (ops, donde) => {
     ops.forEach(o => id(o.id));
     if (ops.length && (ops.length < 2 || ops.length > 6)) err.push(`${donde} tiene que tener entre 2 y 6 opciones (o ninguna, para respuesta libre).`);
   };
-  (config.pasos || []).forEach((paso, i) => {
+  (Array.isArray(config.pasos) ? config.pasos : []).forEach((paso, i) => {
     id(paso.id);
     const nombre = `El paso ${i + 1}`;
     if (paso.tipo === 'registro') {
@@ -58,7 +59,8 @@ export function validarConfig(config) {
       paso.preguntas?.forEach(q => id(q.id));
       opciones(paso.opciones || [], nombre);
     } else if (paso.tipo === 'pregunta') {
-      id(paso.pregunta.id);
+      if (paso.pregunta) id(paso.pregunta.id);
+      else err.push(`${nombre} (pregunta) no tiene la pregunta: falta el texto.`);
       opciones(paso.opciones || [], nombre);
     }
   });
