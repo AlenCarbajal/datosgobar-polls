@@ -1,6 +1,8 @@
 # Consulta sobre supertemas y temas asociados
 
-En cada pregunta revisá los temas asociados al supertema y votá una opción.
+Entrá a cada supertema, revisá sus temas asociados y votá una opción. Los que ya respondiste quedan en verde.
+
+Modo: libre
 
 ## Población y sociedad
 - Género y diversidad sexual

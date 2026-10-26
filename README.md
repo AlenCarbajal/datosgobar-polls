@@ -15,7 +15,10 @@ Las preguntas están en [`consulta.md`](consulta.md), un archivo de texto. Para 
 # Título de la consulta
 Instrucciones para los participantes (una o más líneas).
 
+Modo: libre
+
 ## Primera pregunta o supertema
+Una breve descripción (opcional).
 - Tema asociado (opcional)
 - Otro tema
 
@@ -34,6 +37,8 @@ Instrucciones para los participantes (una o más líneas).
 ```
 
 - `#` es el título; las líneas sueltas debajo, las instrucciones.
+- `Modo: libre` o `Modo: guiado` (si no se pone, es guiado). Ver *Dos modos* más abajo.
+- Las líneas sueltas debajo de un `##` son su descripción.
 - Cada `##` es un paso de la presentación. Se vota con **Ok / No / Comentar / Omitir**.
 - Los `-` debajo de una pregunta son sus temas, que se muestran como etiquetas.
 - `## Registro: ...` es el formulario de registro. El texto después de `Registro:` es el título y los `-` son opciones para marcar (si no hay, no se muestran).
@@ -42,6 +47,12 @@ Instrucciones para los participantes (una o más líneas).
 
 No renombres una pregunta que ya se votó: los votos quedan atados a su título.
 Para validar el archivo antes de subirlo: `node test.js`.
+
+## Dos modos
+
+**Guiado** (`Modo: guiado`): el presentador va pregunta por pregunta y todos los celulares lo siguen.
+
+**Libre** (`Modo: libre`): todas las preguntas forman un solo paso, *Consulta abierta*. En el celular se ve la lista; cada persona entra a la que quiera, vota y vuelve a la lista, donde las que ya respondió quedan en verde ("3 de 14 respondidas"). La pantalla muestra un resumen en vivo de todas; tocando una se ve el detalle con sus comentarios. Los pasos quedan: Bienvenida → Consulta abierta → Registro → Cierre.
 
 ## Cómo se presenta
 
@@ -94,5 +105,6 @@ Los registros incluyen emails, así que no se pueden leer desde la web: solo se 
 ## Límites conocidos
 
 - Hay un voto por pregunta por navegador. Alguien que use otro navegador, o que llame a la API directamente, puede votar de nuevo. Para una consulta no vinculante en una sala alcanza; si fuera vinculante, haría falta login.
-- "Omitir" no se guarda: solo cierra la pregunta en ese celular.
+- "Omitir" (modo guiado) no se guarda: solo cierra la pregunta en ese celular. En modo libre no hay Omitir: se vuelve a la lista.
+- Lo que cada persona ya respondió se recuerda en su navegador: si cambia de celular o borra los datos del navegador, ve todo sin marcar (igual no puede votar dos veces la misma pregunta desde el mismo navegador).
 - Los comentarios se proyectan sin moderación.

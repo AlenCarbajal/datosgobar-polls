@@ -48,6 +48,12 @@
   .pulso { width: 14px; height: 14px; border-radius: 50%; background: var(--violeta); margin: 0 auto 24px; animation: pulso 1.6s infinite; }
   @keyframes pulso { 50% { opacity: .3; transform: scale(1.6); } }
   @media (prefers-reduced-motion: reduce) { .pulso { animation: none; } }
+  .lista { display: grid; gap: 8px; }
+  .item { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 16px; text-align: left; background: #fff; color: var(--navy); border: 2px solid var(--borde); }
+  .item .estado { font-size: 13px; color: var(--indigo); white-space: nowrap; }
+  .item.ok { border-color: var(--ok); background: #EEF7EE; }
+  .item.ok .estado { color: var(--ok); }
+  button.volver { margin: 0 0 16px; }
   .temas { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 16px; }
   .temas li { background: var(--tile); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 500; }
 
@@ -61,6 +67,10 @@
   .bienvenida #qr { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid var(--borde); }
   .bienvenida h1 { font-size: 36px; }
   .url { font-size: 28px; font-weight: 800; color: var(--indigo); word-break: break-all; margin: 8px 0 0; }
+  .resumen { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .mini { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 14px; text-align: left; background: #fff; color: var(--navy); border: 1px solid var(--borde); border-radius: 10px; font-weight: 500; }
+  .mini:hover { border-color: var(--indigo); }
+  .mini .barra { margin: 2px 0; width: 100%; }
   .presentes { font-size: 18px; font-weight: 600; margin: 16px 0 0; }
   .grilla { display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
   .qr { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 16px; text-align: center; position: sticky; top: 16px; }
@@ -161,9 +171,11 @@ let pasoActual, timer;
 const valido = paso => PASOS.includes(paso) ? paso : 'inicio'; // p. ej. una pregunta que se renombró en consulta.md
 const pregunta = id => C.preguntas.find(p => p.id === id);
 const nombrePaso = paso =>
-  paso === 'inicio' ? 'Bienvenida' : paso === 'registro' ? 'Registro' : paso === 'fin' ? 'Cierre' :
+  paso === 'inicio' ? 'Bienvenida' : paso === 'registro' ? 'Registro' : paso === 'fin' ? 'Cierre' : paso === 'lista' ? 'Consulta abierta' :
   `Pregunta ${C.preguntas.findIndex(p => p.id === paso) + 1} de ${C.preguntas.length}`;
 const listaTemas = p => p.temas.length ? `<ul class="temas">${p.temas.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
+const respondida = p => localStorage.getItem('votado:' + p.id);
+const descripcion = x => x.descripcion ? `<p class="sub" style="margin:-6px 0 14px">${esc(x.descripcion)}</p>` : '';
 const hecho = texto => `<p class="hecho"><span aria-hidden="true">✓</span> ${texto}</p>`;
 const espera = (titulo, texto) => `<div class="espera"><div class="pulso" aria-hidden="true"></div><h1>${titulo}</h1><p class="sub">${texto}</p></div>`;
 function mensaje(el, texto, esError = true) { el.className = esError ? 'msg error' : 'msg'; el.textContent = texto; }
@@ -182,9 +194,12 @@ function participante() {
   sondear();
 }
 
+const avisoDemo = () => DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador.</p>' : '';
+
 function vistaParticipante(paso) {
+  if (paso === 'lista') return vistaLista();
   const p = pregunta(paso);
-  $('#app').innerHTML = (DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador.</p>' : '') + (
+  $('#app').innerHTML = avisoDemo() + (
     p ? formPregunta(p) :
     paso === 'registro' && C.registro ? formRegistro() :
     paso === 'fin' ? espera('¡Gracias por participar!', 'Ya podés cerrar esta página.') :
@@ -192,18 +207,40 @@ function vistaParticipante(paso) {
   conectarFormularios();
 }
 
+// Modo libre: la persona elige qué pregunta responder y vuelve a la lista, donde las respondidas quedan en verde.
+let elegida = null;
+function vistaLista() {
+  const p = pregunta(elegida);
+  if (p) {
+    $('#app').innerHTML = avisoDemo() + '<button type="button" class="secundario volver" id="volver">← Volver a la lista</button>' + formPregunta(p);
+    $('#volver').onclick = () => { elegida = null; vistaLista(); };
+    conectarFormularios();
+    return;
+  }
+  const hechas = C.preguntas.filter(respondida).length;
+  $('#app').innerHTML = avisoDemo() + `
+    <h1>${esc(C.titulo)}</h1><p class="sub">${esc(C.instrucciones)}</p>
+    <p class="num">${hechas} de ${C.preguntas.length} respondidas</p>
+    <div class="lista">${C.preguntas.map(p => `
+      <button type="button" class="item${respondida(p) ? ' ok' : ''}" data-id="${esc(p.id)}">
+        <span>${esc(p.texto)}</span><span class="estado">${respondida(p) ? '✓ Respondida' : 'Responder →'}</span>
+      </button>`).join('')}</div>`;
+  document.querySelectorAll('.item').forEach(b => b.onclick = () => { elegida = b.dataset.id; vistaLista(); scrollTo(0, 0); });
+}
+
 const formPregunta = p => `
-  <p class="num">${nombrePaso(p.id)}</p>
+  <p class="num">${C.modo === 'libre' ? 'Supertema' : nombrePaso(p.id)}</p>
   <form class="card" data-pregunta="${esc(p.id)}" novalidate>
     <h2>${esc(p.texto)}</h2>
+    ${descripcion(p)}
     ${listaTemas(p)}
-    ${localStorage.getItem('votado:' + p.id) ? hecho('Ya registramos tu respuesta. Mirá la pantalla para ver los resultados.') : `
+    ${respondida(p) ? hecho('Ya registramos tu respuesta. Mirá la pantalla para ver los resultados.') : `
     <fieldset><legend>Tu opinión</legend><div class="opciones">
       ${Object.entries(OPCIONES).map(([v, t]) => `<label class="opcion"><input type="radio" name="opcion" value="${v}"><span>${t}</span></label>`).join('')}
     </div></fieldset>
     <label class="campo" for="comentario">Comentario <small>(opcional si elegís ${OPCIONES.favor} o ${OPCIONES.contra})</small></label>
     <textarea id="comentario" name="comentario" maxlength="1000"></textarea>
-    <button type="submit">Enviar respuesta</button><button type="button" class="secundario" id="omitir">Omitir</button>
+    <button type="submit">Enviar respuesta</button>${C.modo === 'libre' ? '' : '<button type="button" class="secundario" id="omitir">Omitir</button>'}
     <p class="msg" role="status"></p>`}
   </form>`;
 
@@ -218,6 +255,7 @@ const formRegistro = () => {
   <form class="card" id="registro" novalidate>
     ${localStorage.getItem('registrado') ? hecho('Recibimos tu registro. ¡Gracias!') : `
     <h2>${esc(titulo)}</h2>
+    ${descripcion(C.registro)}
     ${opciones.length ? `<fieldset><legend>Elegí una o más opciones</legend><div class="chips">
       ${opciones.map(n => `<label class="chip"><input type="checkbox" name="opcion" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
     </div></fieldset>` : ''}
@@ -234,7 +272,11 @@ function conectarFormularios() {
   const form = $('form[data-pregunta]');
   if (form?.querySelector('button')) {
     const id = form.dataset.pregunta, msg = form.querySelector('.msg'), boton = form.querySelector('[type=submit]');
-    const cerrar = texto => { localStorage.setItem('votado:' + id, '1'); form.innerHTML = `<h2>${esc(pregunta(id).texto)}</h2>` + hecho(texto); };
+    const cerrar = texto => {
+      localStorage.setItem('votado:' + id, '1');
+      if (C.modo === 'libre') { elegida = null; return vistaLista(); } // vuelve a la lista, con esta en verde
+      form.innerHTML = `<h2>${esc(pregunta(id).texto)}</h2>` + hecho(texto);
+    };
     form.onsubmit = async e => {
       e.preventDefault();
       const d = new FormData(form), opcion = d.get('opcion'), comentario = d.get('comentario').trim();
@@ -248,7 +290,7 @@ function conectarFormularios() {
       cerrar('¡Gracias! Mirá la pantalla para ver los resultados.');
     };
     // ponytail: "Omitir" no se guarda en la base, solo cierra la pregunta en este celular.
-    $('#omitir').onclick = () => cerrar('Omitiste esta pregunta. Esperá la siguiente.');
+    if ($('#omitir')) $('#omitir').onclick = () => cerrar('Omitiste esta pregunta. Esperá la siguiente.');
   }
 
   const reg = $('#registro');
@@ -274,6 +316,7 @@ function conectarFormularios() {
 // ---------- Presentador: #pantalla/CLAVE ----------
 const clave = decodeURIComponent(location.hash.split('/')[1] || '');
 let votos = [], registros = { total: 0, necesidades: [] }, presentes = null;
+let detalle = null; // modo libre: pregunta que la pantalla muestra en detalle (solo en esta pantalla)
 let ultimoCambio = 0; // una lectura que salió antes de terminar un cambio de paso trae el paso viejo: se ignora
 
 function pantalla() {
@@ -287,6 +330,10 @@ function pantalla() {
       <p class="msg" role="status">${manda ? '' : 'Solo lectura. Para manejar la presentación abrí esta pantalla con #pantalla/TU-CLAVE.'}</p>
     </div>
     <div id="escena"></div>`;
+  $('#escena').onclick = e => { // modo libre: abrir una pregunta del resumen o volver
+    const b = e.target.closest('[data-detalle]');
+    if (b) { detalle = b.dataset.detalle || null; pintar(); }
+  };
   if (manda) {
     $('#ant').onclick = () => mover(-1);
     $('#sig').onclick = () => mover(1);
@@ -343,6 +390,7 @@ const textoPresentes = () => presentes === null ? '' : `${presentes} ${presentes
 
 function escena(paso) {
   pasoActual = paso;
+  detalle = null;
   $('#paso-nombre').textContent = nombrePaso(paso);
   const url = esc(URL_PARTICIPAR.replace(/^https?:\/\//, ''));
   $('#escena').innerHTML = paso === 'inicio'
@@ -359,21 +407,40 @@ function pintar() {
   const el = $('#resultados');
   if (!el) return;
   const p = pregunta(pasoActual);
+  if (pasoActual === 'lista') {
+    el.innerHTML = detalle
+      ? '<button type="button" class="secundario volver" data-detalle="">← Volver al resumen</button>' + tarjetaPregunta(pregunta(detalle))
+      : `<div class="resumen">${C.preguntas.map(miniTarjeta).join('')}</div>`;
+    return;
+  }
   el.innerHTML = p ? tarjetaPregunta(p) : pasoActual === 'registro' ? tarjetaRegistro()
     : C.preguntas.map(tarjetaPregunta).join('') + (C.registro ? tarjetaRegistro() : '');
 }
 
-function tarjetaPregunta(p) {
+function conteo(p) {
   const vs = votos.filter(v => v.pregunta === p.id);
   const favor = vs.filter(v => v.opcion === 'favor').length, contra = vs.filter(v => v.opcion === 'contra').length;
-  const total = favor + contra, pct = total ? Math.round(favor / total * 100) : 0;
-  const comentarios = vs.filter(v => v.comentario);
+  const total = favor + contra;
+  return { favor, contra, total, pct: total ? Math.round(favor / total * 100) : 0, n: vs.length, comentarios: vs.filter(v => v.comentario) };
+}
+const respuestas = n => `${n} ${n === 1 ? 'respuesta' : 'respuestas'}`;
+const barra = ({ total, pct }) => `<div class="barra"><div style="width:${pct}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>`;
+
+function miniTarjeta(p) {
+  const c = conteo(p);
+  return `<button type="button" class="mini" data-detalle="${esc(p.id)}"><b>${esc(p.texto)}</b>
+    <span><span class="grande" style="font-size:30px">${c.total ? c.pct + '%' : '–'}</span> ${OPCIONES.favor}</span>
+    ${barra(c)}<span class="ley">${respuestas(c.n)} · ${c.comentarios.length} ${c.comentarios.length === 1 ? 'comentario' : 'comentarios'}</span></button>`;
+}
+
+function tarjetaPregunta(p) {
+  const { favor, contra, total, pct, n, comentarios } = conteo(p);
   return `<div class="card"><h2>${esc(p.texto)}</h2>
-    ${pasoActual === p.id ? listaTemas(p) : ''}
-    <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>${OPCIONES.favor} · ${vs.length} ${vs.length === 1 ? 'respuesta' : 'respuestas'}</span></div>
-    <div class="barra"><div style="width:${pct}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>
+    ${[pasoActual, detalle].includes(p.id) ? descripcion(p) + listaTemas(p) : ''}
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>${OPCIONES.favor} · ${respuestas(n)}</span></div>
+    ${barra({ total, pct })}
     <div class="ley"><span><i style="background:var(--indigo)"></i>${OPCIONES.favor} ${favor}</span><span><i style="background:var(--violeta)"></i>${OPCIONES.contra} ${contra}</span><span>Comentarios ${comentarios.length}</span></div>
-    ${comentarios.slice(0, 4).map(c => `<p class="coment">“${esc(c.comentario)}”</p>`).join('')}
+    ${comentarios.slice(0, detalle === p.id ? 12 : 4).map(c => `<p class="coment">“${esc(c.comentario)}”</p>`).join('')}
   </div>`;
 }
 
