@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es" class="pantalla">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pantalla</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  /* Solo tokens: los colores salen de css/base.css y temas/*.css. Todo en rem: escala con el proyector.
+     Ningún texto menor a 1rem (16 px a 1280 de ancho, 24 px a 1920). */
+  [hidden] { display: none !important; }
+  body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  .encabezado__interior { max-width: none; padding: .75rem 2rem; }
+  .encabezado__logo { height: 2.25rem; }
+  .encabezado__organismo, #evento { font-size: 1.25rem; font-weight: 700; }
+  .eyebrow, .mensaje { font-size: 1rem; }
+  .suave { color: var(--texto-suave); }
+  h1 { font-size: 2.25rem; }
+
+  #escena { flex: 1; min-height: 0; max-width: none; width: 100%; margin: 0; padding: 1.25rem 2rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; overflow: hidden; }
+  .cabeza { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex: none; }
+  .cabeza h1 { margin: 0; }
+  .cabeza .descripcion { margin: .5rem 0 0; color: var(--texto-suave); font-size: 1.25rem; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .cabeza .boton { margin-bottom: .5rem; }
+
+  /* QR: se dibuja una vez y se escala con CSS */
+  .qr img, .qr canvas { display: block; width: 100%; height: auto; }
+  .qr-chico { flex: none; width: 8rem; text-align: center; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: .5rem; }
+  .qr-chico b { display: block; font-size: 1.25rem; margin-top: .25rem; overflow-wrap: anywhere; }
+
+  /* Bienvenida: el título es lo más grande, junto al QR */
+  .bienvenida { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 4rem; }
+  .bienvenida > div:first-child { max-width: 50rem; }
+  .titulo-grande { font-size: 4rem; line-height: 1.1; margin: 0 0 1.5rem; }
+  .bienvenida p { font-size: 1.5rem; margin: 0 0 .5rem; }
+  .bienvenida .direccion { font-size: 1.75rem; font-weight: 700; overflow-wrap: anywhere; }
+  .bienvenida .codigo { font-size: 3.5rem; font-weight: 800; letter-spacing: .04em; color: var(--acento-texto); }
+  .bienvenida .qr { flex: none; width: min(45vh, 30vw); background: var(--superficie); padding: 1rem; border-radius: var(--radio); }
+  #presentes { margin-top: 1.5rem; font-weight: 600; }
+
+  /* Resultado de una pregunta: barras a la izquierda, textos a la derecha */
+  .detalle { flex: 1; min-height: 0; display: grid; grid-template-columns: 3fr 2fr; gap: 2rem; }
+  .detalle--solo { grid-template-columns: 1fr; }
+  .total { font-size: 1.5rem; margin: 0 0 .5rem; }
+  .total b { font-size: 3rem; }
+  .barra { grid-template-columns: minmax(8rem, 30%) 1fr auto; gap: 1rem; margin: .75rem 0; font-size: 1.375rem; }
+  .barra__pista { height: 2rem; }
+  .textos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .75rem; overflow: hidden; }
+  .textos li { background: var(--superficie); border-left: .375rem solid var(--color-acento); border-radius: var(--radio); padding: .625rem 1rem; font-size: 1.25rem;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; flex: none; }
+
+  /* Resumen: la grilla se ajusta al espacio (js/resultados.js grillaPara), sin scroll */
+  .resumen { flex: 1; min-height: 0; display: grid; gap: .75rem; }
+  .mini { display: flex; flex-direction: column; justify-content: space-between; gap: .25rem; min-height: 0; overflow: hidden; text-align: left;
+    font: inherit; color: var(--texto); cursor: pointer; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: .625rem .875rem; }
+  .mini:hover { border-color: var(--borde-campo); }
+  .mini__texto { font-weight: 700; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .mini__dato { font-size: 1.125rem; }
+  .mini__dato b { font-size: 1.75rem; }
+  .mini .barra__pista { display: block; height: .75rem; }
+
+  .grande { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .grande .numero { font-size: 8rem; font-weight: 800; line-height: 1; color: var(--acento-texto); }
+  .grande p { font-size: 2rem; margin: .5rem 0 0; max-width: 60rem; }
+
+  /* Controles de quien presenta: abajo, se ocultan tras 3 s sin mover el mouse */
+  #controles { position: fixed; inset: auto 0 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .75rem 2rem; background: var(--color-principal); color: var(--texto-sobre-principal); transition: transform .3s, opacity .3s; }
+  #paso-nombre { font-weight: 700; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #controles .boton { flex: none; }
+  .quieto #controles { transform: translateY(100%); opacity: 0; }
+  .quieto { cursor: none; }
+  #estado { position: fixed; left: 1rem; bottom: 5rem; z-index: 3; margin: 0; }
+  @media (prefers-reduced-motion: reduce) { #controles { transition: none; } }
+
+  .formulario { max-width: 30rem; margin: 3rem auto; }
+</style>
+</head>
+<body>
+<header class="encabezado">
+  <div class="encabezado__interior"><span id="marca"></span><span id="evento"></span></div>
+  <div class="mosaico" aria-hidden="true"><span>≠</span><span>á</span><span>↑</span><span>@</span><span>≥</span><span>π</span><span>»</span></div>
+</header>
+<main id="escena"></main>
+<nav id="controles" aria-label="Controles de la presentación" hidden>
+  <button type="button" class="boton boton--secundario" id="ant">← Anterior</button>
+  <span id="paso-nombre"></span>
+  <button type="button" class="boton" id="sig">Siguiente →</button>
+</nav>
+<p id="estado" class="mensaje mensaje--aviso" role="status" hidden></p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+<script type="module" src="js/pantalla.js"></script>
+</body>
+</html>
