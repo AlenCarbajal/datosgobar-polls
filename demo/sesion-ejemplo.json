@@ -1,0 +1,51 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "codigo": "demo",
+  "paso": "inicio",
+  "ronda": 0,
+  "archivada": false,
+  "config": {
+    "titulo": "Sesión de ejemplo",
+    "instrucciones": "Respondé desde tu celular. Tus respuestas aparecen en la pantalla.",
+    "estetica": {
+      "preset": "neutro", "organismo": "", "logo": "", "encabezado": "",
+      "colorPrincipal": "#1F2937", "colorAcento": "#2563EB", "tipografia": "system-ui",
+      "esquinas": "suaves", "firma": false
+    },
+    "pasos": [
+      {
+        "id": "registro", "tipo": "registro", "titulo": "Contanos quién sos",
+        "descripcion": "Es opcional. Sirve para enviarte el resumen.", "obligatorio": false,
+        "campos": [
+          { "id": "nombre", "etiqueta": "Nombre", "tipo": "texto", "obligatorio": true },
+          { "id": "email", "etiqueta": "Email", "tipo": "email", "obligatorio": true }
+        ]
+      },
+      {
+        "id": "temas", "tipo": "lista", "titulo": "¿Qué te parece cada tema?",
+        "opciones": [
+          { "id": "ok", "texto": "Ok" },
+          { "id": "no", "texto": "No" },
+          { "id": "comentar", "texto": "Comentar", "pideTexto": "obligatorio" }
+        ],
+        "preguntas": [
+          { "id": "tema-1", "texto": "Primer tema", "descripcion": "Descripción breve del primer tema." },
+          { "id": "tema-2", "texto": "Segundo tema", "descripcion": "Descripción breve del segundo tema." },
+          { "id": "tema-3", "texto": "Tercer tema", "descripcion": "Descripción breve del tercer tema." },
+          { "id": "tema-4", "texto": "Cuarto tema", "descripcion": "Descripción breve del cuarto tema." }
+        ]
+      },
+      {
+        "id": "prioridad", "tipo": "pregunta",
+        "pregunta": { "id": "prioridad-1", "texto": "¿Cuál tendría que ser la prioridad?" },
+        "opciones": [
+          { "id": "a", "texto": "Opción A" },
+          { "id": "b", "texto": "Opción B" },
+          { "id": "c", "texto": "Opción C" },
+          { "id": "otra", "texto": "Otra", "pideTexto": "opcional" }
+        ]
+      }
+    ],
+    "final": { "titulo": "¡Gracias por participar!", "texto": "Tus respuestas ya quedaron registradas." }
+  }
+}
