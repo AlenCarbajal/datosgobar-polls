@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consulta y registro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --navy: #232D4F; --indigo: #393793; --violeta: #B369ED; --tile: #E8E9F1; --borde: #D5D8E3; --texto2: #4F5672; --ok: #2E7D32; --error: #C62828; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Montserrat, system-ui, sans-serif; color: var(--navy); background: #F5F6FA; line-height: 1.5; }
+  header { background: var(--navy); color: #fff; }
+  .top { max-width: 720px; margin: 0 auto; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+  .top b { font-weight: 800; }
+  .mosaico { display: grid; grid-template-columns: 3fr 1fr 2fr 1fr 4fr 1fr 2fr; height: 34px; }
+  .mosaico span { display: grid; place-items: center; color: #fff; font-size: 15px; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; line-height: 1.2; }
+  .sub { color: var(--texto2); margin: 0 0 28px; }
+  .num { font-size: 13px; font-weight: 600; color: var(--indigo); margin: 32px 0 8px; letter-spacing: .02em; }
+  .card { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 18px; font-weight: 800; margin: 0 0 14px; line-height: 1.3; }
+  fieldset { border: 0; padding: 0; margin: 0 0 12px; }
+  legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .opciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .opcion, .chip { position: relative; cursor: pointer; }
+  .opcion input, .chip input { position: absolute; opacity: 0; }
+  .opcion span { display: flex; gap: 8px; align-items: center; border: 2px solid var(--borde); border-radius: 8px; padding: 12px; font-weight: 500; }
+  .opcion input:checked + span { border-color: var(--indigo); background: #EFEEFA; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip span { display: inline-block; border: 2px solid var(--borde); border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 500; }
+  .chip input:checked + span { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+  .opcion input:focus-visible + span, .chip input:focus-visible + span, button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--violeta); outline-offset: 2px; }
+  label.campo { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
+  label.campo small { font-weight: 400; color: var(--texto2); }
+  textarea, input[type=text], input[type=email] { width: 100%; font: inherit; color: inherit; border: 2px solid var(--borde); border-radius: 8px; padding: 10px; background: #fff; }
+  textarea { min-height: 80px; resize: vertical; }
+  button { font: inherit; font-weight: 600; background: var(--navy); color: #fff; border: 0; border-radius: 8px; padding: 12px 20px; cursor: pointer; margin-top: 14px; }
+  button:disabled { opacity: .6; cursor: wait; }
+  .msg { font-size: 14px; margin: 10px 0 0; }
+  .msg.error { color: var(--error); }
+  .hecho { display: flex; gap: 10px; align-items: center; color: var(--ok); font-weight: 600; }
+  .demo { background: #FFF6DB; border: 1px solid #F0D58A; color: #6B4E00; font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-bottom: 20px; }
+
+  /* pantalla del presentador */
+  body.pantalla main { max-width: 1280px; }
+  body.pantalla .top { max-width: 1280px; }
+  .grilla { display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
+  .qr { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 16px; text-align: center; position: sticky; top: 16px; }
+  .qr #qr { display: flex; justify-content: center; margin: 8px 0; }
+  .qr p { margin: 0; font-size: 14px; word-break: break-all; }
+  .grande { font-size: 44px; font-weight: 800; color: var(--indigo); line-height: 1; }
+  .barra { display: flex; height: 18px; border-radius: 4px; overflow: hidden; background: var(--tile); margin: 10px 0 8px; }
+  .barra div { transition: width .5s; }
+  .ley { display: flex; gap: 18px; font-size: 14px; flex-wrap: wrap; }
+  .ley i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+  .coment { border-left: 3px solid var(--violeta); background: #F6F4FC; padding: 6px 10px; margin: 8px 0 0; font-size: 15px; }
+  .nec { display: grid; grid-template-columns: 180px 1fr 40px; gap: 10px; align-items: center; margin: 8px 0; font-size: 15px; }
+  .nec .barra { margin: 0; }
+  @media (max-width: 760px) { .grilla { grid-template-columns: 1fr; } .qr { position: static; } .nec { grid-template-columns: 110px 1fr 32px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><b id="org"></b><span id="evento"></span></div>
+  <div class="mosaico" aria-hidden="true">
+    <span style="background:var(--navy)">≠</span><span style="background:var(--violeta)">á</span><span style="background:var(--indigo)">↑</span><span style="background:var(--tile);color:var(--navy)">@</span><span style="background:var(--indigo)">≥</span><span style="background:var(--violeta)">π</span><span style="background:var(--navy)">»</span>
+  </div>
+</header>
+<main id="app"></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+<script>
+// ===== Configuración: lo único que hay que editar =====
+const CONFIG = {
+  supabaseUrl: '', // ej. 'https://abcd1234.supabase.co' — vacío = modo demo (guarda en este navegador)
+  supabaseKey: '', // la "anon" / "publishable" key: es pública por diseño, la seguridad la ponen las políticas de schema.sql
+  organismo: 'Dirección Nacional de Datos Abiertos',
+  evento: 'Encuentro 2026',
+  titulo: 'Tu opinión cuenta',
+  preguntas: [
+    { id: 'p1', texto: '¿Estás de acuerdo con publicar los datos de compras públicas en formato abierto?' },
+    { id: 'p2', texto: '¿Deberíamos unificar los catálogos de datos de todos los organismos en un único portal?' },
+  ],
+  necesidades: ['Asistencia técnica', 'Capacitación', 'Publicación de datos', 'Normalización de datos', 'Uso de APIs', 'Otro'],
+};
+// ======================================================
+
+const DEMO = !CONFIG.supabaseUrl;
+const OPCIONES = { favor: 'A favor', contra: 'En contra', comentario: 'Solo comentar' };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+const leer = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+
+let pid = localStorage.getItem('pid');
+if (!pid) localStorage.setItem('pid', pid = crypto.randomUUID());
+
+async function rest(path, body) {
+  const r = await fetch(`${CONFIG.supabaseUrl}/rest/v1/${path}`, {
+    method: body ? 'POST' : 'GET',
+    headers: { apikey: CONFIG.supabaseKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: body && JSON.stringify(body),
+  });
+  if (!r.ok) throw { status: r.status };
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+
+// ponytail: modo demo en localStorage para probar sin Supabase; solo ve los datos de este navegador.
+function guardarDemo(k, fila) {
+  const filas = leer(k);
+  if (k === 'votos' && filas.some(f => f.pregunta === fila.pregunta && f.participante === fila.participante)) throw { status: 409 };
+  localStorage.setItem(k, JSON.stringify([{ ...fila, creado: new Date().toISOString() }, ...filas]));
+}
+
+const api = {
+  votar: v => DEMO ? guardarDemo('votos', v) : rest('votos', v),
+  registrar: r => DEMO ? guardarDemo('registros', r) : rest('registros', r),
+  votos: () => DEMO ? leer('votos') : rest('votos?select=pregunta,opcion,comentario,creado&order=creado.desc'),
+  necesidades: () => {
+    if (!DEMO) return rest('rpc/conteo_necesidades', {});
+    const c = {};
+    leer('registros').forEach(r => r.necesidades.forEach(n => c[n] = (c[n] || 0) + 1));
+    return Object.entries(c).map(([necesidad, total]) => ({ necesidad, total })).sort((a, b) => b.total - a.total);
+  },
+};
+
+function enviando(form, si) { form.querySelector('button').disabled = si; }
+function error(form, texto) { form.querySelector('.msg').className = 'msg error'; form.querySelector('.msg').textContent = texto; }
+const hecho = texto => `<p class="hecho"><span aria-hidden="true">✓</span> ${texto}</p>`;
+
+// ---------- Vista participante ----------
+function participante() {
+  document.body.className = '';
+  $('#app').innerHTML = `
+    ${DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador. Completá la configuración de Supabase para usarlo en el evento.</p>' : ''}
+    <h1>${esc(CONFIG.titulo)}</h1>
+    <p class="sub">Respondé la consulta y contanos qué necesitás. Te lleva dos minutos.</p>
+    <p class="num">01. Consulta</p>
+    ${CONFIG.preguntas.map(p => `
+      <form class="card" data-pregunta="${esc(p.id)}" novalidate>
+        <h2>${esc(p.texto)}</h2>
+        ${localStorage.getItem('votado:' + p.id) ? hecho('Ya registramos tu respuesta. ¡Gracias!') : `
+        <fieldset><legend>Tu posición</legend><div class="opciones">
+          ${Object.entries(OPCIONES).map(([v, t]) => `<label class="opcion"><input type="radio" name="opcion" value="${v}"><span>${t}</span></label>`).join('')}
+        </div></fieldset>
+        <label class="campo" for="c-${esc(p.id)}">Comentario <small>(opcional si votás)</small></label>
+        <textarea id="c-${esc(p.id)}" name="comentario" maxlength="1000"></textarea>
+        <button type="submit">Enviar respuesta</button><p class="msg" role="status"></p>`}
+      </form>`).join('')}
+    <p class="num">02. Registro de necesidades</p>
+    <form class="card" id="registro" novalidate>
+      ${localStorage.getItem('registrado') ? hecho('Recibimos tu registro. Nos vamos a poner en contacto.') : `
+      <h2>¿Qué necesita tu organismo de nosotros?</h2>
+      <fieldset><legend>Elegí una o más opciones</legend><div class="chips">
+        ${CONFIG.necesidades.map(n => `<label class="chip"><input type="checkbox" name="necesidad" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
+      </div></fieldset>
+      <label class="campo" for="organismo">Organismo</label>
+      <input type="text" id="organismo" name="organismo" maxlength="200" autocomplete="organization">
+      <label class="campo" for="nombre">Nombre <small>(opcional)</small></label>
+      <input type="text" id="nombre" name="nombre" maxlength="200" autocomplete="name">
+      <label class="campo" for="email">Email de contacto <small>(opcional)</small></label>
+      <input type="email" id="email" name="email" maxlength="200" autocomplete="email">
+      <label class="campo" for="detalle">Contanos más <small>(opcional)</small></label>
+      <textarea id="detalle" name="detalle" maxlength="2000"></textarea>
+      <button type="submit">Registrar</button><p class="msg" role="status"></p>`}
+    </form>`;
+
+  document.querySelectorAll('form[data-pregunta]').forEach(form => form.onsubmit = async e => {
+    e.preventDefault();
+    const id = form.dataset.pregunta, d = new FormData(form);
+    const opcion = d.get('opcion'), comentario = (d.get('comentario') || '').trim();
+    if (!opcion) return error(form, 'Elegí una opción antes de enviar.');
+    if (opcion === 'comentario' && !comentario) return error(form, 'Escribí tu comentario antes de enviar.');
+    enviando(form, true);
+    try {
+      await api.votar({ pregunta: id, participante: pid, opcion, comentario: comentario || null });
+    } catch (err) {
+      if (err.status !== 409) { enviando(form, false); return error(form, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
+    }
+    localStorage.setItem('votado:' + id, '1'); // 409 = ya había votado: lo tratamos como hecho
+    form.innerHTML = `<h2>${esc(CONFIG.preguntas.find(p => p.id === id).texto)}</h2>` + hecho('¡Gracias! Registramos tu respuesta.');
+  });
+
+  const reg = $('#registro');
+  reg.onsubmit = async e => {
+    e.preventDefault();
+    if (localStorage.getItem('registrado')) return;
+    const d = new FormData(reg), necesidades = d.getAll('necesidad');
+    const fila = { necesidades, organismo: d.get('organismo').trim(), nombre: d.get('nombre').trim() || null, email: d.get('email').trim() || null, detalle: d.get('detalle').trim() || null };
+    if (!necesidades.length) return error(reg, 'Elegí al menos una necesidad.');
+    if (!fila.organismo) return error(reg, 'Indicá tu organismo.');
+    if (fila.email && !reg.email.checkValidity()) return error(reg, 'Revisá el email: parece incompleto.');
+    enviando(reg, true);
+    try { await api.registrar(fila); }
+    catch { enviando(reg, false); return error(reg, 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
+    localStorage.setItem('registrado', '1');
+    reg.innerHTML = hecho('Recibimos tu registro. Nos vamos a poner en contacto.');
+  };
+}
+
+// ---------- Vista presentador (#pantalla) ----------
+function pantalla() {
+  document.body.className = 'pantalla';
+  const url = location.href.split('#')[0];
+  $('#app').innerHTML = `
+    <div class="grilla">
+      <aside class="qr"><p><b>Participá desde tu celular</b></p><div id="qr"></div><p>${esc(url)}</p></aside>
+      <div id="resultados"><p>Cargando resultados…</p></div>
+    </div>`;
+  if (window.QRCode) new QRCode($('#qr'), { text: url, width: 200, height: 200, colorDark: '#232D4F' });
+  actualizar();
+}
+
+async function actualizar() {
+  if (!document.body.classList.contains('pantalla')) return;
+  try {
+    const [votos, necesidades] = await Promise.all([api.votos(), api.necesidades()]);
+    const maxNec = Math.max(1, ...necesidades.map(n => n.total));
+    $('#resultados').innerHTML = `
+      <p class="num" style="margin-top:0">01. Consulta</p>
+      ${CONFIG.preguntas.map(p => {
+        const vs = votos.filter(v => v.pregunta === p.id);
+        const favor = vs.filter(v => v.opcion === 'favor').length, contra = vs.filter(v => v.opcion === 'contra').length;
+        const total = favor + contra, pct = total ? Math.round(favor / total * 100) : 0;
+        const comentarios = vs.filter(v => v.comentario).slice(0, 4);
+        return `<div class="card"><h2>${esc(p.texto)}</h2>
+          <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>a favor · ${vs.length} respuestas</span></div>
+          <div class="barra"><div style="width:${total ? pct : 0}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>
+          <div class="ley"><span><i style="background:var(--indigo)"></i>A favor ${favor}</span><span><i style="background:var(--violeta)"></i>En contra ${contra}</span><span>Comentarios ${vs.filter(v => v.comentario).length}</span></div>
+          ${comentarios.map(c => `<p class="coment">“${esc(c.comentario)}”</p>`).join('')}
+        </div>`;
+      }).join('')}
+      <p class="num">02. Necesidades registradas</p>
+      <div class="card">${necesidades.length ? necesidades.map(n => `
+        <div class="nec"><span>${esc(n.necesidad)}</span><div class="barra"><div style="width:${n.total / maxNec * 100}%;background:var(--navy)"></div></div><b>${n.total}</b></div>`).join('')
+        : '<p style="margin:0">Todavía no hay registros.</p>'}</div>`;
+  } catch {
+    if (!$('#resultados .error')) $('#resultados').insertAdjacentHTML('afterbegin', '<p class="msg error">Sin conexión con la base. Reintentando…</p>');
+  }
+  setTimeout(actualizar, 4000); // ponytail: polling cada 4 s, sobra para ~60 personas; pasar a Supabase Realtime si fueran miles
+}
+
+$('#org').textContent = CONFIG.organismo;
+$('#evento').textContent = CONFIG.evento;
+const ruta = () => location.hash === '#pantalla' ? pantalla() : participante();
+addEventListener('hashchange', ruta);
+ruta();
+</script>
+</body>
+</html>
