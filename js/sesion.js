@@ -32,36 +32,69 @@ export const buscarPregunta = (config, preguntaId) =>
 
 export const opcionesDe = (config, preguntaId) => buscarPregunta(config, preguntaId)?.paso.opciones || [];
 
+const esObjeto = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+const TIPOS_PASO = ['registro', 'lista', 'pregunta'];
+
+// Nunca lanza: una config importada a mano puede traer cualquier cosa.
 export function validarConfig(config) {
-  if (!config || typeof config !== 'object') return ['La configuración de la sesión está vacía o dañada.'];
+  if (!esObjeto(config)) return ['La configuración de la sesión está vacía o dañada.'];
   const err = [];
   if (typeof config.titulo !== 'string' || !config.titulo.trim()) err.push('Falta el título de la sesión.');
   if (typeof config.final?.titulo !== 'string' || !config.final.titulo.trim()) err.push('Falta el título del mensaje final.');
+  if (config.estetica !== undefined && !esObjeto(config.estetica)) err.push('La estética de la sesión está dañada.');
   if (!Array.isArray(config.pasos) || !config.pasos.length) err.push('La sesión necesita al menos un paso.');
   const vistos = new Set();
-  const id = (x) => { if (vistos.has(x)) err.push(`Hay un id repetido: ${x}.`); vistos.add(x); };
-  const opciones = (ops, donde) => {
-    ops.forEach(o => id(o.id));
+  const id = (x, que) => {
+    if (typeof x !== 'string' || !x.trim()) return err.push(`${que} no tiene id.`);
+    if (vistos.has(x)) err.push(`Hay un id repetido: ${x}.`);
+    vistos.add(x);
+  };
+  // Lista de objetos: ausente = vacía; si no es lista o trae algo que no es objeto, se avisa y se ignora lo dañado.
+  const lista = (v, que, donde) => {
+    if (v === undefined) return [];
+    if (!Array.isArray(v)) { err.push(`${donde}: ${que} tiene que ser una lista.`); return []; }
+    const ok = v.filter(esObjeto);
+    if (ok.length < v.length) err.push(`${donde}: hay ${que} dañadas.`);
+    return ok;
+  };
+  const pregunta = (q, donde) => {
+    id(q.id, `${donde}: una pregunta`);
+    if (q.etiquetas !== undefined && (!Array.isArray(q.etiquetas) || q.etiquetas.some(e => typeof e !== 'string')))
+      err.push(`${donde}: las etiquetas de una pregunta tienen que ser una lista de textos.`);
+  };
+  const opciones = (v, donde) => {
+    const ops = lista(v, 'opciones', donde);
+    ops.forEach(o => {
+      id(o.id, `${donde}: una opción`);
+      if (o.pideTexto !== undefined && o.pideTexto !== 'obligatorio' && o.pideTexto !== 'opcional')
+        err.push(`${donde}: la opción "${o.texto}" tiene un "pide texto" desconocido.`);
+    });
     if (ops.length && (ops.length < 2 || ops.length > 6)) err.push(`${donde} tiene que tener entre 2 y 6 opciones (o ninguna, para respuesta libre).`);
   };
   (Array.isArray(config.pasos) ? config.pasos : []).forEach((paso, i) => {
-    id(paso.id);
     const nombre = `El paso ${i + 1}`;
+    if (!esObjeto(paso)) return err.push(`${nombre} está dañado.`);
+    id(paso.id, nombre);
+    if (!TIPOS_PASO.includes(paso.tipo)) return err.push(`${nombre} tiene un tipo desconocido: "${paso.tipo}".`);
     if (paso.tipo === 'registro') {
-      if (!paso.campos?.length) err.push(`${nombre} (registro) necesita al menos un campo.`);
-      paso.campos?.forEach(c => {
-        id(c.id);
-        if (c.tipo === 'seleccion' && (c.opciones?.length || 0) < 2) err.push(`El campo "${c.etiqueta}" necesita al menos 2 opciones.`);
+      const campos = lista(paso.campos, 'campos', nombre);
+      if (!campos.length) err.push(`${nombre} (registro) necesita al menos un campo.`);
+      campos.forEach(c => {
+        id(c.id, `${nombre}: un campo`);
+        if (c.opciones !== undefined && (!Array.isArray(c.opciones) || c.opciones.some(o => typeof o !== 'string')))
+          err.push(`Las opciones del campo "${c.etiqueta}" tienen que ser una lista de textos.`);
+        else if (c.tipo === 'seleccion' && (c.opciones?.length || 0) < 2) err.push(`El campo "${c.etiqueta}" necesita al menos 2 opciones.`);
       });
       if (paso.obligatorio && i !== 0) err.push('El registro obligatorio tiene que ser el primer paso.');
     } else if (paso.tipo === 'lista') {
-      if (!paso.preguntas?.length) err.push(`${nombre} (lista) necesita al menos una pregunta.`);
-      paso.preguntas?.forEach(q => id(q.id));
-      opciones(paso.opciones || [], nombre);
-    } else if (paso.tipo === 'pregunta') {
-      if (paso.pregunta) id(paso.pregunta.id);
+      const preguntas = lista(paso.preguntas, 'preguntas', nombre);
+      if (!preguntas.length) err.push(`${nombre} (lista) necesita al menos una pregunta.`);
+      preguntas.forEach(q => pregunta(q, nombre));
+      opciones(paso.opciones, nombre);
+    } else {
+      if (esObjeto(paso.pregunta)) pregunta(paso.pregunta, nombre);
       else err.push(`${nombre} (pregunta) no tiene la pregunta: falta el texto.`);
-      opciones(paso.opciones || [], nombre);
+      opciones(paso.opciones, nombre);
     }
   });
   return err;

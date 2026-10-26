@@ -75,7 +75,9 @@ async function inicio() {
     $('#quien').textContent = u.email;
     if (!(await api.esAdmin())) return mostrar('no-autorizado');
     mostrar('panel');
-    await Promise.all([listar(), listarAdmins()]);
+    // Ya entró: si falla la carga, se queda en el panel con el aviso (no vuelve al formulario de entrar).
+    await listar().catch(e => mensaje($('#lista-msj'), 'No se pudo cargar la lista de sesiones: ' + falla(e) + '. Recargá la página.'));
+    await listarAdmins().catch(e => mensaje($('#admins-msj'), 'No se pudo cargar la lista de admins: ' + falla(e) + '.'));
   } catch (e) {
     mostrar('entrar');
     mensaje($('#entrar-msj'), 'No se pudo conectar. Revisá la conexión y recargá la página.');
@@ -105,7 +107,7 @@ $('#salir').addEventListener('click', async () => {
   location.reload();
 });
 
-addEventListener('beforeunload', (ev) => { if (sinGuardar()) ev.preventDefault(); });
+addEventListener('beforeunload', (ev) => { if (sinGuardar()) { ev.preventDefault(); ev.returnValue = ''; } });
 
 // ---------- Lista de sesiones ----------
 function estadoDe(s) {
@@ -259,8 +261,7 @@ $('#agregar-admin').addEventListener('submit', async (ev) => {
 const TIPOS = { lista: 'Lista de preguntas', pregunta: 'Pregunta guiada', registro: 'Registro' };
 const TIPOS_CAMPO = { texto: 'Texto corto', texto_largo: 'Texto largo', email: 'Email', telefono: 'Teléfono', numero: 'Número', seleccion: 'Desplegable (elegir de una lista)' };
 const PIDE = [['', 'No pide texto'], ['opcional', 'Pide texto (opcional)'], ['obligatorio', 'Pide texto (obligatorio)']];
-const TIPOGRAFIAS = ['system-ui', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Source Sans 3', 'Merriweather'];
-const ESQUINAS = { rectas: 'Rectas', suaves: 'Suaves', redondeadas: 'Redondeadas' };
+const { TIPOGRAFIAS, ESQUINAS } = ed;
 const nombreFuente = (f) => f === 'system-ui' ? 'La del sistema' : f;
 
 function abrirEditor(s) {
@@ -510,8 +511,9 @@ $('#guardar').addEventListener('click', async () => {
   b.disabled = true;
   msj.className = ''; msj.textContent = 'Guardando…';
   try {
-    const errores = [...validarConfig(borrador), ...ed.revisarTextos(borrador),
-      ...cambiosBloqueados(original, borrador, await api.conteos(actual.id))];
+    // Las otras revisiones suponen una config bien formada: solo corren si validarConfig no encontró nada.
+    let errores = validarConfig(borrador);
+    if (!errores.length) errores = [...ed.revisarTextos(borrador), ...cambiosBloqueados(original, borrador, await api.conteos(actual.id))];
     if (errores.length) {
       caja.innerHTML = `<b>No se guardó. Corregí esto:</b><ul>${errores.map(e => `<li>${esc(e)}</li>`).join('')}</ul>`;
       caja.hidden = false;
@@ -540,7 +542,7 @@ $('#importar').addEventListener('click', () => {
   try {
     const c = ed.leerConfigJson($('#importar-texto').value);
     if (!confirm('Esto reemplaza toda la configuración de esta sesión. ¿Seguir? (No se guarda hasta que toques Guardar.)')) return;
-    borrador = ed.completar(structuredClone(c));
+    borrador = ed.completar(c); // c ya pasó leerConfigJson (forma + validarConfig)
     pintarEditor();
     mensaje(msj, 'Listo. Revisá la sesión y tocá Guardar.', false);
   } catch (e) { mensaje(msj, e.message); }

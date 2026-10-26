@@ -1,7 +1,10 @@
 // Lógica pura del editor de sesiones (sin DOM): se usa desde js/admin.js y desde los tests.
-import { nuevoId, codigoValido } from './sesion.js';
+import { nuevoId, codigoValido, validarConfig } from './sesion.js';
 import { leerBloques } from './pegar.js';
 import { resolverEstetica, contraste, colorTextoSobre } from './tema.js';
+
+export const TIPOGRAFIAS = ['system-ui', 'Montserrat', 'Roboto', 'Open Sans', 'Lato', 'Source Sans 3', 'Merriweather'];
+export const ESQUINAS = { rectas: 'Rectas', suaves: 'Suaves', redondeadas: 'Redondeadas' };
 
 export const opcionNueva = (texto = '') => ({ id: nuevoId('o'), texto });
 export const preguntaNueva = (texto = '') => ({ id: nuevoId('q'), texto });
@@ -66,13 +69,19 @@ export function errorCodigo(codigo, existentes) {
   return '';
 }
 
-// Acepta la config sola o una sesión entera ({ codigo, config, … }).
+// Acepta la config sola o una sesión entera ({ codigo, config, … }). Solo devuelve configs válidas.
 export function leerConfigJson(texto) {
   let x;
   try { x = JSON.parse(texto); } catch { throw new Error('El texto no es un JSON válido. Copialo completo, desde la primera { hasta la última }.'); }
-  const c = x && !Array.isArray(x) && typeof x.config === 'object' ? x.config : x;
-  if (!c || typeof c !== 'object' || Array.isArray(c) || !Array.isArray(c.pasos))
+  const objeto = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const c = objeto(x) && objeto(x.config) ? x.config : x;
+  if (!objeto(c) || !Array.isArray(c.pasos))
     throw new Error('El JSON no parece la configuración de una sesión (le faltan los pasos).');
+  const errores = validarConfig(c);
+  if (errores.length) throw new Error('No se puede usar este JSON: ' + errores.join(' '));
+  const e = c.estetica ??= {};
+  if ('tipografia' in e && !TIPOGRAFIAS.includes(e.tipografia)) delete e.tipografia; // desconocida: usa la del estilo
+  if ('esquinas' in e && !Object.hasOwn(ESQUINAS, e.esquinas)) delete e.esquinas;
   return c;
 }
 
@@ -94,7 +103,9 @@ export function revisarTextos(config) {
 export function completar(config) {
   config.titulo ??= ''; config.instrucciones ??= ''; config.estetica ??= {};
   config.final ??= { titulo: '', texto: '' };
+  if (!Array.isArray(config.pasos)) config.pasos = [];
   for (const p of config.pasos) {
+    if (!p || typeof p !== 'object') continue;
     if (p.tipo === 'registro') p.campos ??= [];
     if (p.tipo === 'lista') p.preguntas ??= [];
     if (p.tipo === 'pregunta') p.pregunta ??= preguntaNueva();

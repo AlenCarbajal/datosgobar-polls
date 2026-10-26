@@ -79,3 +79,24 @@ test('cambiosBloqueados: pasar entre texto libre y opciones', () => {
 });
 test('claveLocal incluye la ronda', () =>
   assert.equal(s.claveLocal({ id: 'x', ronda: 2 }, 'votado', 'q1'), 'x:2:votado:q1'));
+
+test('validarConfig: datos dañados se rechazan sin lanzar', () => {
+  const m = (f) => { const c = cfg(); f(c); return s.validarConfig(c).join(' | '); };
+  assert.match(m(c => { c.pasos.push(null); }), /paso 4 está dañado/);
+  assert.match(m(c => { c.pasos[2].tipo = 'raro'; }), /tipo desconocido: "raro"/);
+  assert.match(m(c => { delete c.pasos[1].id; }), /paso 2 no tiene id/);
+  assert.match(m(c => { c.pasos[1].preguntas[0].id = ''; }), /una pregunta no tiene id/);
+  assert.match(m(c => { delete c.pasos[1].opciones[0].id; }), /una opción no tiene id/);
+  assert.match(m(c => { delete c.pasos[0].campos[0].id; }), /un campo no tiene id/);
+  assert.match(m(c => { c.pasos[1].opciones[2].pideTexto = 'siempre'; }), /"pide texto" desconocido/);
+  assert.match(m(c => { c.pasos[1].opciones = 'x'; }), /opciones tiene que ser una lista/);
+  assert.match(m(c => { c.pasos[1].preguntas = {}; }), /preguntas tiene que ser una lista/);
+  assert.match(m(c => { c.pasos[0].campos = 'x'; }), /campos tiene que ser una lista/);
+  assert.match(m(c => { c.pasos[1].preguntas[0].etiquetas = 'a'; }), /etiquetas .* lista de textos/);
+  assert.match(m(c => { c.pasos[1].preguntas.push(7); }), /hay preguntas dañadas/);
+  assert.match(m(c => { c.pasos[1].opciones.push(null); }), /hay opciones dañadas/);
+  assert.match(m(c => { c.pasos[0].campos[0].opciones = 'a'; }), /opciones del campo .* lista de textos/);
+  assert.match(m(c => { c.pasos[2].pregunta = 'x'; }), /no tiene la pregunta/);
+  assert.match(m(c => { c.estetica = 'x'; }), /estética .* dañada/);
+  assert.match(s.validarConfig([]).join(), /vacía o dañada/);
+});

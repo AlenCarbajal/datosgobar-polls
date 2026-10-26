@@ -126,3 +126,20 @@ test('completar: agrega lo que falta sin tocar lo que hay', () => {
   assert.deepEqual(c.pasos[2], { id: 'r', tipo: 'registro', campos: [] });
   assert.equal(c.titulo, 'X');
 });
+
+test('leerConfigJson: rechaza configs dañadas con mensajes en castellano, sin lanzar TypeError', () => {
+  const con = (f) => { const c = cfg(); f(c); return () => leerConfigJson(JSON.stringify(c)); };
+  assert.throws(con(c => { c.pasos = [null]; }), /No se puede usar este JSON: .*paso 1 está dañado/);
+  assert.throws(con(c => { c.pasos[1].opciones = 'x'; }), /opciones tiene que ser una lista/);
+  assert.throws(con(c => { c.pasos[2].tipo = 'raro'; }), /tipo desconocido/);
+  assert.throws(con(c => { delete c.pasos[1].preguntas[0].id; }), /una pregunta no tiene id/);
+  assert.throws(con(c => { c.estetica = 'x'; }), /estética .* dañada/);
+  for (const f of [c => { c.pasos = [null]; }, c => { c.pasos[1].opciones = 'x'; }])
+    assert.throws(con(f), (e) => !(e instanceof TypeError));
+});
+
+test('leerConfigJson: una tipografía o esquinas desconocidas se descartan (vuelve a la del estilo)', () => {
+  const c = cfg();
+  c.estetica = { preset: 'neutro', tipografia: 'Comic Sans', esquinas: 'raras', colorPrincipal: '#112233' };
+  assert.deepEqual(leerConfigJson(JSON.stringify(c)).estetica, { preset: 'neutro', colorPrincipal: '#112233' });
+});
