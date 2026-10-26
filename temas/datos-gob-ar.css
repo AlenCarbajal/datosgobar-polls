@@ -11,6 +11,7 @@
   --fondo: #F5F6FA;
   --superficie: #FFFFFF;
   --borde: #D5D8E3;
+  --borde-campo: #7A8099;
   --texto: #232D4F;
   --texto-suave: #4F5672;
   --exito: #2E7D32;
@@ -20,7 +21,7 @@
 
   --principal-suave: var(--tile);
   --barra-secundaria: var(--violeta);
-  --foco: var(--violeta);
+  --foco: var(--violeta);      /* 3.4:1 sobre blanco, 3.2:1 sobre --fondo */
 }
 
 [data-firma] .mosaico { display: grid; grid-template-columns: 3fr 1fr 2fr 1fr 4fr 1fr 2fr; height: 2.125rem; }

@@ -13,6 +13,20 @@ test('colorTextoSobre', () => {
   assert.equal(colorTextoSobre('#F5C518'), '#1A1A1A');
 });
 
+test('resolverEstetica: el preset completa lo que la sesión no fijó', () => {
+  const gob = resolverEstetica({ preset: 'datos-gob-ar' });
+  assert.equal(gob.colorPrincipal, '#232D4F');
+  assert.equal(gob.colorAcento, '#393793');
+  assert.equal(gob.tipografia, 'Montserrat');
+  assert.equal(gob.firma, true);
+  const mixto = resolverEstetica({ preset: 'datos-gob-ar', colorAcento: '#F5C518' });
+  assert.equal(mixto.colorPrincipal, '#232D4F');
+  assert.equal(mixto.tipografia, 'Montserrat');
+  assert.equal(mixto.colorAcento, '#F5C518');
+  assert.deepEqual(resolverEstetica(null), ESTETICA_DEFECTO);
+  assert.equal(resolverEstetica({ esquinas: 'toString' }).esquinas, 'suaves');
+});
+
 test('resolverEstetica: defecto, preset, valores vacíos e inválidos', () => {
   assert.deepEqual(resolverEstetica({}), ESTETICA_DEFECTO);
   const gob = resolverEstetica({ preset: 'datos-gob-ar' });

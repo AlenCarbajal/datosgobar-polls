@@ -4,7 +4,7 @@
 const BLANCO = '#FFFFFF';
 const OSCURO = '#1A1A1A';
 const HEX = /^#[0-9a-f]{6}$/i;
-const RADIOS = { rectas: '0', suaves: '8px', redondeadas: '16px' };
+const RADIOS = { rectas: '0px', suaves: '8px', redondeadas: '16px' };
 
 export const ESTETICA_DEFECTO = {
   preset: 'neutro', organismo: '', logo: '', encabezado: '',
@@ -39,8 +39,11 @@ export function colorTextoSobre(fondo) {
   return contraste(fondo, BLANCO) >= contraste(fondo, OSCURO) ? BLANCO : OSCURO;
 }
 
-// Defecto < preset < lo elegido en la sesión. Lo vacío o inválido se ignora.
-export function resolverEstetica(estetica = {}) {
+// Contrato: la `estetica` guardada en una sesión tiene SOLO los campos que el admin fijó a mano.
+// Precedencia: ESTETICA_DEFECTO < PRESETS[preset] < campos de la sesión.
+// Lo vacío (''/null/undefined) o inválido se ignora y cae al valor del preset o del defecto.
+export function resolverEstetica(estetica) {
+  estetica ??= {};
   const preset = Object.hasOwn(PRESETS, estetica.preset) ? estetica.preset : 'neutro';
   const e = { ...ESTETICA_DEFECTO, ...PRESETS[preset] };
   for (const [k, v] of Object.entries(estetica)) if (v !== undefined && v !== null && v !== '') e[k] = v;
@@ -48,7 +51,7 @@ export function resolverEstetica(estetica = {}) {
   for (const k of ['colorPrincipal', 'colorAcento']) {
     if (!HEX.test(e[k])) e[k] = PRESETS[preset][k] || ESTETICA_DEFECTO[k];
   }
-  if (!RADIOS[e.esquinas]) e.esquinas = ESTETICA_DEFECTO.esquinas;
+  if (!Object.hasOwn(RADIOS, e.esquinas)) e.esquinas = ESTETICA_DEFECTO.esquinas;
   return e;
 }
 

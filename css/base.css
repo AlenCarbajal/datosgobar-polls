@@ -12,6 +12,7 @@
   --fondo: #F6F7F9;
   --superficie: #FFFFFF;
   --borde: #CDD2DA;
+  --borde-campo: #7B8391;  /* bordes de campos y opciones: ≥ 3:1 sobre --superficie y --fondo */
   --texto: #1A1A1A;
   --texto-suave: #4B5260;
   --exito: #15803D;
@@ -27,7 +28,8 @@
   /* Acento usado como texto sobre fondo claro: oscurecido para que un acento claro (amarillo) siga legible */
   --acento-texto: color-mix(in srgb, var(--color-acento) 45%, var(--texto));
   --barra-secundaria: color-mix(in srgb, var(--color-acento) 45%, var(--superficie));
-  --foco: var(--color-acento);
+  /* Anillo de foco: el acento oscurecido, así un acento claro sigue dando ≥ 3:1 */
+  --foco: var(--acento-texto);
 
   --radio: 8px;
   --fuente: system-ui, sans-serif;
@@ -93,15 +95,16 @@ h2 { font-size: 1.125rem; font-weight: 800; line-height: 1.3; margin: 0 0 .875re
 .opcion input { position: absolute; opacity: 0; }
 .opcion span {
   display: flex; gap: .625rem; align-items: center; min-height: 44px; padding: .75rem;
-  background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); font-weight: 500;
+  background: var(--superficie); border: 2px solid var(--borde-campo); border-radius: var(--radio); font-weight: 500;
 }
 .opcion span::before {
   content: ''; flex: none; display: grid; place-items: center; width: 1.375rem; height: 1.375rem;
   border: 2px solid var(--texto-suave); border-radius: 50%; font-size: .875rem; font-weight: 800; line-height: 1;
 }
-.opcion input:checked + span { border-color: var(--color-acento); background: var(--acento-suave); font-weight: 600; }
+/* Borde con --acento-texto: un acento claro no puede quedar más tenue que una opción sin elegir */
+.opcion input:checked + span { border-color: var(--acento-texto); background: var(--acento-suave); font-weight: 600; }
 .opcion input:checked + span::before {
-  content: '✓'; background: var(--color-acento); border-color: var(--color-acento); color: var(--texto-sobre-acento);
+  content: '✓'; background: var(--color-acento); border-color: var(--acento-texto); color: var(--texto-sobre-acento);
 }
 .opcion input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
 
@@ -111,7 +114,7 @@ h2 { font-size: 1.125rem; font-weight: 800; line-height: 1.3; margin: 0 0 .875re
 /* :where() deja la especificidad en 0 para que [aria-invalid] gane sin !important */
 :where(input:not([type=radio]):not([type=checkbox]), textarea, select) {
   width: 100%; min-height: 44px; font: inherit; color: var(--texto); background: var(--superficie);
-  border: 2px solid var(--borde); border-radius: var(--radio); padding: .625rem;
+  border: 2px solid var(--borde-campo); border-radius: var(--radio); padding: .625rem;
 }
 textarea { min-height: 5rem; resize: vertical; }
 [aria-invalid=true] { border-color: var(--error); }
