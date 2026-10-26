@@ -67,8 +67,8 @@ function apiSupabase(sb) {
     inscripciones: (id) => tabla('inscripciones', id),
     async conteos(id) { return conteosDe(await tabla('respuestas', id, 'id,pregunta_id,opcion_id')); },
     async admins() { return ok(await sb.from('admins').select('email').order('email')).map(a => a.email); },
-    async agregarAdmin(email) { ok(await sb.from('admins').insert({ email })); },
-    async quitarAdmin(email) { ok(await sb.from('admins').delete().eq('email', email)); },
+    async agregarAdmin(email) { ok(await sb.from('admins').insert({ email: email.trim().toLowerCase() })); },
+    async quitarAdmin(email) { ok(await sb.from('admins').delete().eq('email', email.trim().toLowerCase())); },
   };
 }
 
@@ -84,10 +84,13 @@ function apiDemo(almacen, ejemplo) {
 
   return {
     async sesionPorCodigo(codigo) { const s = sesion(); return s.codigo === codigo ? s : null; },
+    // Contrato de escuchar (igual en ambos backends): alSesion(sesion) en cada cambio; alRespuesta(fila) en Supabase,
+    // pero en demo alRespuesta() llega SIN argumento y significa "algo cambió, volvé a pedir respuestas()".
+    // alPresentes no se dispara nunca en demo: las vistas ocultan el contador hasta que llegue.
     escuchar(sesionId, { alSesion, alRespuesta } = {}) {
       const al = (k) => {
         if (k === 'sesion') alSesion?.(sesion());
-        if (k === 'respuestas') { const rs = leer('respuestas', []); if (rs.length) alRespuesta?.(rs[rs.length - 1]); }
+        if (k === 'respuestas') alRespuesta?.(); // sin argumento: "algo cambió, volvé a pedir todo" (los eventos storage se pueden juntar)
       };
       const deOtraPestana = (e) => { if (e.key?.startsWith('demo:')) al(e.key.slice(5)); };
       oyentes.add(al);

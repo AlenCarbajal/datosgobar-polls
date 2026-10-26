@@ -19,9 +19,13 @@ revoke execute on function es_admin() from public;
 grant execute on function es_admin() to anon, authenticated;
 
 revoke all on admins from anon, authenticated;
-grant select on admins to authenticated;
+grant select, insert, delete on admins to authenticated;
 drop policy if exists "admins ven admins" on admins;
 create policy "admins ven admins" on admins for select to authenticated using (es_admin());
+drop policy if exists "admins agregan admins" on admins;
+create policy "admins agregan admins" on admins for insert to authenticated with check (es_admin());
+drop policy if exists "admins quitan admins" on admins;
+create policy "admins quitan admins" on admins for delete to authenticated using (es_admin());
 
 -- ===== Sesiones =====
 create table if not exists sesiones (

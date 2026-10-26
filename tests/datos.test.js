@@ -30,11 +30,11 @@ test('demo: cambiarPaso avisa a los suscriptores', async () => {
 });
 test('demo: responder avisa y desuscribir corta los avisos', async () => {
   const api = nueva();
-  const vistas = []; const parar = api.escuchar(sesionEjemplo.id, { alRespuesta: r => vistas.push(r.pregunta_id) });
+  const vistas = []; const parar = api.escuchar(sesionEjemplo.id, { alRespuesta: (...a) => vistas.push(a.length ? a[0] : undefined) });
   await api.responder(resp);
   parar();
   await api.responder({ ...resp, pregunta_id: 'q2' });
-  assert.deepEqual(vistas, ['q1']);
+  assert.deepEqual(vistas, [undefined]); // sin argumento: refetch
 });
 test('demo: reiniciar borra todo, vuelve a inicio y sube la ronda', async () => {
   const api = nueva();
@@ -76,4 +76,8 @@ test('supabase: insertar no pide la fila de vuelta y reiniciar usa p_sesion', as
   assert.ok(sb.llamadas.slice(0, 2).every(c => c.ops.every(([k]) => k !== 'select')));
   await api.reiniciar('s');
   assert.deepEqual(sb.llamadas.at(-1), { rpc: 'reiniciar_sesion', a: { p_sesion: 's' } });
+});
+test('supabase: agregarAdmin guarda el email en minúsculas y sin espacios', async () => {
+  const sb = falsoSupabase(); await crearApi({ supabase: sb }).agregarAdmin('  Ana@Mail.COM ');
+  assert.deepEqual(sb.llamadas[0].ops[0], ['insert', { email: 'ana@mail.com' }]);
 });
