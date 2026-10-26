@@ -11,14 +11,15 @@
   * { box-sizing: border-box; }
   body { margin: 0; font-family: Montserrat, system-ui, sans-serif; color: var(--navy); background: #F5F6FA; line-height: 1.5; }
   header { background: var(--navy); color: #fff; }
-  .top { max-width: 720px; margin: 0 auto; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
-  .top b { font-weight: 800; }
+  .top { max-width: 720px; margin: 0 auto; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; }
+  .top b { font-weight: 800; font-size: 17px; }
+  .top img { height: 28px; display: block; }
   .mosaico { display: grid; grid-template-columns: 3fr 1fr 2fr 1fr 4fr 1fr 2fr; height: 34px; }
   .mosaico span { display: grid; place-items: center; color: #fff; font-size: 15px; }
   main { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
   h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; line-height: 1.2; }
   .sub { color: var(--texto2); margin: 0 0 28px; }
-  .num { font-size: 13px; font-weight: 600; color: var(--indigo); margin: 32px 0 8px; letter-spacing: .02em; }
+  .num { font-size: 13px; font-weight: 600; color: var(--indigo); margin: 8px 0 8px; letter-spacing: .02em; }
   .card { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
   .card h2 { font-size: 18px; font-weight: 800; margin: 0 0 14px; line-height: 1.3; }
   fieldset { border: 0; padding: 0; margin: 0 0 12px; }
@@ -42,10 +43,22 @@
   .msg.error { color: var(--error); }
   .hecho { display: flex; gap: 10px; align-items: center; color: var(--ok); font-weight: 600; }
   .demo { background: #FFF6DB; border: 1px solid #F0D58A; color: #6B4E00; font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-bottom: 20px; }
+  .espera { text-align: center; padding: 48px 0; }
+  .pulso { width: 14px; height: 14px; border-radius: 50%; background: var(--violeta); margin: 0 auto 24px; animation: pulso 1.6s infinite; }
+  @keyframes pulso { 50% { opacity: .3; transform: scale(1.6); } }
+  @media (prefers-reduced-motion: reduce) { .pulso { animation: none; } }
 
   /* pantalla del presentador */
-  body.pantalla main { max-width: 1280px; }
-  body.pantalla .top { max-width: 1280px; }
+  body.pantalla main, body.pantalla .top { max-width: 1280px; }
+  .controles { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .controles button { margin: 0; }
+  .controles #ant { background: #fff; color: var(--navy); border: 2px solid var(--borde); }
+  .controles span { flex: 1; text-align: center; font-weight: 800; font-size: 18px; }
+  .controles .msg { flex-basis: 100%; text-align: center; margin: 0; }
+  .bienvenida { display: flex; gap: 48px; align-items: center; justify-content: center; padding: 32px 0; flex-wrap: wrap; }
+  .bienvenida #qr { background: #fff; padding: 16px; border-radius: 10px; border: 1px solid var(--borde); }
+  .bienvenida h1 { font-size: 36px; }
+  .url { font-size: 28px; font-weight: 800; color: var(--indigo); word-break: break-all; margin: 8px 0 0; }
   .grilla { display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
   .qr { background: #fff; border: 1px solid var(--borde); border-radius: 10px; padding: 16px; text-align: center; position: sticky; top: 16px; }
   .qr #qr { display: flex; justify-content: center; margin: 8px 0; }
@@ -63,7 +76,7 @@
 </head>
 <body>
 <header>
-  <div class="top"><b id="org"></b><span id="evento"></span></div>
+  <div class="top"><span id="org"></span><span id="evento"></span></div>
   <div class="mosaico" aria-hidden="true">
     <span style="background:var(--navy)">≠</span><span style="background:var(--violeta)">á</span><span style="background:var(--indigo)">↑</span><span style="background:var(--tile);color:var(--navy)">@</span><span style="background:var(--indigo)">≥</span><span style="background:var(--violeta)">π</span><span style="background:var(--navy)">»</span>
   </div>
@@ -76,8 +89,9 @@
 const CONFIG = {
   supabaseUrl: '', // ej. 'https://abcd1234.supabase.co' — vacío = modo demo (guarda en este navegador)
   supabaseKey: '', // la "anon" / "publishable" key: es pública por diseño, la seguridad la ponen las políticas de schema.sql
-  organismo: 'Dirección Nacional de Datos Abiertos',
-  evento: 'Encuentro 2026',
+  organismo: 'datos.gob.ar',
+  logo: '', // ej. 'logo-datosgobar.svg' (versión blanca, junto a index.html) — vacío = se muestra el nombre como texto
+  evento: 'Jornada de Datos Abiertos 2026',
   titulo: 'Tu opinión cuenta',
   preguntas: [
     { id: 'p1', texto: '¿Estás de acuerdo con publicar los datos de compras públicas en formato abierto?' },
@@ -89,6 +103,8 @@ const CONFIG = {
 
 const DEMO = !CONFIG.supabaseUrl;
 const OPCIONES = { favor: 'A favor', contra: 'En contra', comentario: 'Solo comentar' };
+const PASOS = ['inicio', ...CONFIG.preguntas.map(p => p.id), 'registro', 'fin'];
+const URL_PARTICIPAR = location.href.split('#')[0];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 const leer = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
@@ -124,51 +140,82 @@ const api = {
     leer('registros').forEach(r => r.necesidades.forEach(n => c[n] = (c[n] || 0) + 1));
     return Object.entries(c).map(([necesidad, total]) => ({ necesidad, total })).sort((a, b) => b.total - a.total);
   },
+  paso: async () => DEMO ? localStorage.getItem('paso') || 'inicio' : (await rest('estado?select=paso&id=eq.1'))[0]?.paso || 'inicio',
+  cambiarPaso: (clave, paso) => DEMO ? localStorage.setItem('paso', paso) : rest('rpc/cambiar_paso', { p_clave: clave, p_paso: paso }),
 };
 
+let timer, pasoActual, datos;
+const nombrePaso = paso =>
+  paso === 'inicio' ? 'Bienvenida' : paso === 'registro' ? 'Registro de necesidades' : paso === 'fin' ? 'Cierre' :
+  `Pregunta ${CONFIG.preguntas.findIndex(p => p.id === paso) + 1} de ${CONFIG.preguntas.length}`;
+const pregunta = paso => CONFIG.preguntas.find(p => p.id === paso);
+const hecho = texto => `<p class="hecho"><span aria-hidden="true">✓</span> ${texto}</p>`;
+const espera = (titulo, texto) => `<div class="espera"><div class="pulso" aria-hidden="true"></div><h1>${titulo}</h1><p class="sub">${texto}</p></div>`;
 function enviando(form, si) { form.querySelector('button').disabled = si; }
 function error(form, texto) { form.querySelector('.msg').className = 'msg error'; form.querySelector('.msg').textContent = texto; }
-const hecho = texto => `<p class="hecho"><span aria-hidden="true">✓</span> ${texto}</p>`;
 
-// ---------- Vista participante ----------
-function participante() {
+// ---------- Vista participante: sigue el paso que elige el presentador ----------
+async function participante() {
   document.body.className = '';
-  $('#app').innerHTML = `
-    ${DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador. Completá la configuración de Supabase para usarlo en el evento.</p>' : ''}
-    <h1>${esc(CONFIG.titulo)}</h1>
-    <p class="sub">Respondé la consulta y contanos qué necesitás. Te lleva dos minutos.</p>
-    <p class="num">01. Consulta</p>
-    ${CONFIG.preguntas.map(p => `
-      <form class="card" data-pregunta="${esc(p.id)}" novalidate>
-        <h2>${esc(p.texto)}</h2>
-        ${localStorage.getItem('votado:' + p.id) ? hecho('Ya registramos tu respuesta. ¡Gracias!') : `
-        <fieldset><legend>Tu posición</legend><div class="opciones">
-          ${Object.entries(OPCIONES).map(([v, t]) => `<label class="opcion"><input type="radio" name="opcion" value="${v}"><span>${t}</span></label>`).join('')}
-        </div></fieldset>
-        <label class="campo" for="c-${esc(p.id)}">Comentario <small>(opcional si votás)</small></label>
-        <textarea id="c-${esc(p.id)}" name="comentario" maxlength="1000"></textarea>
-        <button type="submit">Enviar respuesta</button><p class="msg" role="status"></p>`}
-      </form>`).join('')}
-    <p class="num">02. Registro de necesidades</p>
-    <form class="card" id="registro" novalidate>
-      ${localStorage.getItem('registrado') ? hecho('Recibimos tu registro. Nos vamos a poner en contacto.') : `
-      <h2>¿Qué necesita tu organismo de nosotros?</h2>
-      <fieldset><legend>Elegí una o más opciones</legend><div class="chips">
-        ${CONFIG.necesidades.map(n => `<label class="chip"><input type="checkbox" name="necesidad" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
-      </div></fieldset>
-      <label class="campo" for="organismo">Organismo</label>
-      <input type="text" id="organismo" name="organismo" maxlength="200" autocomplete="organization">
-      <label class="campo" for="nombre">Nombre <small>(opcional)</small></label>
-      <input type="text" id="nombre" name="nombre" maxlength="200" autocomplete="name">
-      <label class="campo" for="email">Email de contacto <small>(opcional)</small></label>
-      <input type="email" id="email" name="email" maxlength="200" autocomplete="email">
-      <label class="campo" for="detalle">Contanos más <small>(opcional)</small></label>
-      <textarea id="detalle" name="detalle" maxlength="2000"></textarea>
-      <button type="submit">Registrar</button><p class="msg" role="status"></p>`}
-    </form>`;
+  try {
+    const paso = await api.paso();
+    if (esPantalla()) return;
+    if (paso !== pasoActual) vistaParticipante(pasoActual = paso);
+  } catch {
+    if (esPantalla()) return;
+    if (!pasoActual) $('#app').innerHTML = espera('Conectando…', 'Revisá tu conexión. Seguimos intentando.');
+  }
+  clearTimeout(timer);
+  timer = setTimeout(participante, 3000); // ponytail: polling cada 3 s; Supabase Realtime si fueran miles
+}
 
-  document.querySelectorAll('form[data-pregunta]').forEach(form => form.onsubmit = async e => {
+function vistaParticipante(paso) {
+  const p = pregunta(paso);
+  $('#app').innerHTML = (DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador. Completá la configuración de Supabase para usarlo en el evento.</p>' : '') + (
+    p ? formPregunta(p) :
+    paso === 'registro' ? formRegistro() :
+    paso === 'fin' ? espera('¡Gracias por participar!', 'Ya podés cerrar esta página.') :
+    espera('Ya estás adentro', 'Cuando empiece la presentación vas a ver acá cada pregunta. No hace falta recargar.'));
+  conectarFormularios();
+}
+
+const formPregunta = p => `
+  <p class="num">${nombrePaso(p.id)}</p>
+  <form class="card" data-pregunta="${esc(p.id)}" novalidate>
+    <h2>${esc(p.texto)}</h2>
+    ${localStorage.getItem('votado:' + p.id) ? hecho('Ya registramos tu respuesta. Mirá la pantalla para ver los resultados.') : `
+    <fieldset><legend>Tu posición</legend><div class="opciones">
+      ${Object.entries(OPCIONES).map(([v, t]) => `<label class="opcion"><input type="radio" name="opcion" value="${v}"><span>${t}</span></label>`).join('')}
+    </div></fieldset>
+    <label class="campo" for="c-${esc(p.id)}">Comentario <small>(opcional si votás)</small></label>
+    <textarea id="c-${esc(p.id)}" name="comentario" maxlength="1000"></textarea>
+    <button type="submit">Enviar respuesta</button><p class="msg" role="status"></p>`}
+  </form>`;
+
+const formRegistro = () => `
+  <p class="num">Registro de necesidades</p>
+  <form class="card" id="registro" novalidate>
+    ${localStorage.getItem('registrado') ? hecho('Recibimos tu registro. Nos vamos a poner en contacto.') : `
+    <h2>¿Qué necesita tu organismo de nosotros?</h2>
+    <fieldset><legend>Elegí una o más opciones</legend><div class="chips">
+      ${CONFIG.necesidades.map(n => `<label class="chip"><input type="checkbox" name="necesidad" value="${esc(n)}"><span>${esc(n)}</span></label>`).join('')}
+    </div></fieldset>
+    <label class="campo" for="organismo">Organismo</label>
+    <input type="text" id="organismo" name="organismo" maxlength="200" autocomplete="organization">
+    <label class="campo" for="nombre">Nombre <small>(opcional)</small></label>
+    <input type="text" id="nombre" name="nombre" maxlength="200" autocomplete="name">
+    <label class="campo" for="email">Email de contacto <small>(opcional)</small></label>
+    <input type="email" id="email" name="email" maxlength="200" autocomplete="email">
+    <label class="campo" for="detalle">Contanos más <small>(opcional)</small></label>
+    <textarea id="detalle" name="detalle" maxlength="2000"></textarea>
+    <button type="submit">Registrar</button><p class="msg" role="status"></p>`}
+  </form>`;
+
+function conectarFormularios() {
+  const form = $('form[data-pregunta]');
+  if (form) form.onsubmit = async e => {
     e.preventDefault();
+    if (localStorage.getItem('votado:' + form.dataset.pregunta)) return;
     const id = form.dataset.pregunta, d = new FormData(form);
     const opcion = d.get('opcion'), comentario = (d.get('comentario') || '').trim();
     if (!opcion) return error(form, 'Elegí una opción antes de enviar.');
@@ -180,11 +227,11 @@ function participante() {
       if (err.status !== 409) { enviando(form, false); return error(form, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
     }
     localStorage.setItem('votado:' + id, '1'); // 409 = ya había votado: lo tratamos como hecho
-    form.innerHTML = `<h2>${esc(CONFIG.preguntas.find(p => p.id === id).texto)}</h2>` + hecho('¡Gracias! Registramos tu respuesta.');
-  });
+    form.innerHTML = `<h2>${esc(pregunta(id).texto)}</h2>` + hecho('¡Gracias! Mirá la pantalla para ver los resultados.');
+  };
 
   const reg = $('#registro');
-  reg.onsubmit = async e => {
+  if (reg) reg.onsubmit = async e => {
     e.preventDefault();
     if (localStorage.getItem('registrado')) return;
     const d = new FormData(reg), necesidades = d.getAll('necesidad');
@@ -200,51 +247,114 @@ function participante() {
   };
 }
 
-// ---------- Vista presentador (#pantalla) ----------
+// ---------- Vista presentador: #pantalla/CLAVE ----------
+const clave = () => decodeURIComponent(location.hash.split('/')[1] || '');
+
 function pantalla() {
   document.body.className = 'pantalla';
-  const url = location.href.split('#')[0];
+  const manda = DEMO || clave();
   $('#app').innerHTML = `
-    <div class="grilla">
-      <aside class="qr"><p><b>Participá desde tu celular</b></p><div id="qr"></div><p>${esc(url)}</p></aside>
-      <div id="resultados"><p>Cargando resultados…</p></div>
-    </div>`;
-  if (window.QRCode) new QRCode($('#qr'), { text: url, width: 200, height: 200, colorDark: '#232D4F' });
-  actualizar();
+    <div class="controles">
+      ${manda ? '<button id="ant" type="button">← Anterior</button>' : ''}
+      <span id="paso-nombre"></span>
+      ${manda ? '<button id="sig" type="button">Siguiente →</button>' : ''}
+      <p class="msg" role="status">${manda ? '' : 'Solo lectura. Para manejar la presentación abrí esta pantalla con #pantalla/TU-CLAVE.'}</p>
+    </div>
+    <div id="escena"></div>`;
+  if (manda) { $('#ant').onclick = () => mover(-1); $('#sig').onclick = () => mover(1); }
+  tickPantalla();
 }
 
-async function actualizar() {
-  if (!document.body.classList.contains('pantalla')) return;
+let ultimoCambio = 0; // una lectura que empezó antes de terminar un cambio de paso trae el paso viejo: se ignora
+
+async function tickPantalla() {
+  const inicio = Date.now();
   try {
-    const [votos, necesidades] = await Promise.all([api.votos(), api.necesidades()]);
-    const maxNec = Math.max(1, ...necesidades.map(n => n.total));
-    $('#resultados').innerHTML = `
-      <p class="num" style="margin-top:0">01. Consulta</p>
-      ${CONFIG.preguntas.map(p => {
-        const vs = votos.filter(v => v.pregunta === p.id);
-        const favor = vs.filter(v => v.opcion === 'favor').length, contra = vs.filter(v => v.opcion === 'contra').length;
-        const total = favor + contra, pct = total ? Math.round(favor / total * 100) : 0;
-        const comentarios = vs.filter(v => v.comentario).slice(0, 4);
-        return `<div class="card"><h2>${esc(p.texto)}</h2>
-          <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>a favor · ${vs.length} respuestas</span></div>
-          <div class="barra"><div style="width:${total ? pct : 0}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>
-          <div class="ley"><span><i style="background:var(--indigo)"></i>A favor ${favor}</span><span><i style="background:var(--violeta)"></i>En contra ${contra}</span><span>Comentarios ${vs.filter(v => v.comentario).length}</span></div>
-          ${comentarios.map(c => `<p class="coment">“${esc(c.comentario)}”</p>`).join('')}
-        </div>`;
-      }).join('')}
-      <p class="num">02. Necesidades registradas</p>
-      <div class="card">${necesidades.length ? necesidades.map(n => `
-        <div class="nec"><span>${esc(n.necesidad)}</span><div class="barra"><div style="width:${n.total / maxNec * 100}%;background:var(--navy)"></div></div><b>${n.total}</b></div>`).join('')
-        : '<p style="margin:0">Todavía no hay registros.</p>'}</div>`;
+    const [paso, votos, necesidades] = await Promise.all([api.paso(), api.votos(), api.necesidades()]);
+    if (!esPantalla()) return;
+    datos = { votos, necesidades };
+    if (paso !== pasoActual && inicio > ultimoCambio) escena(paso); else pintar();
   } catch {
-    if (!$('#resultados .error')) $('#resultados').insertAdjacentHTML('afterbegin', '<p class="msg error">Sin conexión con la base. Reintentando…</p>');
+    if (!esPantalla()) return;
+    $('.controles .msg').className = 'msg error';
+    $('.controles .msg').textContent = 'Sin conexión con la base. Reintentando…';
   }
-  setTimeout(actualizar, 4000); // ponytail: polling cada 4 s, sobra para ~60 personas; pasar a Supabase Realtime si fueran miles
+  clearTimeout(timer);
+  timer = setTimeout(tickPantalla, 3000);
 }
 
-$('#org').textContent = CONFIG.organismo;
+async function mover(delta) {
+  const anterior = pasoActual;
+  const nuevo = PASOS[Math.min(PASOS.length - 1, Math.max(0, PASOS.indexOf(anterior) + delta))];
+  if (nuevo === anterior) return;
+  ultimoCambio = Infinity;
+  escena(nuevo);
+  try {
+    await api.cambiarPaso(clave(), nuevo);
+    $('.controles .msg').textContent = '';
+  } catch {
+    escena(anterior);
+    $('.controles .msg').className = 'msg error';
+    $('.controles .msg').textContent = 'No se pudo cambiar el paso. Revisá la clave en la dirección (#pantalla/TU-CLAVE).';
+  }
+  ultimoCambio = Date.now();
+}
+
+function escena(paso) {
+  pasoActual = paso;
+  $('#paso-nombre').textContent = nombrePaso(paso);
+  const url = esc(URL_PARTICIPAR.replace(/^https?:\/\//, ''));
+  $('#escena').innerHTML = paso === 'inicio'
+    ? `<div class="bienvenida"><div id="qr"></div><div><p class="num">Sumate desde tu celular</p><h1>Escaneá el código<br>o entrá a</h1><p class="url">${url}</p></div></div>`
+    : `<div class="grilla"><aside class="qr"><p><b>Sumate desde tu celular</b></p><div id="qr"></div><p>${url}</p></aside><div id="resultados"></div></div>`;
+  const lado = paso === 'inicio' ? 320 : 200;
+  if (window.QRCode) new QRCode($('#qr'), { text: URL_PARTICIPAR, width: lado, height: lado, colorDark: '#232D4F' });
+  pintar();
+}
+
+function pintar() {
+  const el = $('#resultados');
+  if (!el || !datos) return;
+  const p = pregunta(pasoActual);
+  el.innerHTML = p ? tarjetaPregunta(p) : pasoActual === 'registro' ? tarjetaNecesidades()
+    : CONFIG.preguntas.map(tarjetaPregunta).join('') + tarjetaNecesidades();
+}
+
+function tarjetaPregunta(p) {
+  const vs = datos.votos.filter(v => v.pregunta === p.id);
+  const favor = vs.filter(v => v.opcion === 'favor').length, contra = vs.filter(v => v.opcion === 'contra').length;
+  const total = favor + contra, pct = total ? Math.round(favor / total * 100) : 0;
+  const comentarios = vs.filter(v => v.comentario);
+  return `<div class="card"><h2>${esc(p.texto)}</h2>
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="grande">${total ? pct + '%' : '–'}</span><span>a favor · ${vs.length} respuestas</span></div>
+    <div class="barra"><div style="width:${total ? pct : 0}%;background:var(--indigo)"></div><div style="width:${total ? 100 - pct : 0}%;background:var(--violeta)"></div></div>
+    <div class="ley"><span><i style="background:var(--indigo)"></i>A favor ${favor}</span><span><i style="background:var(--violeta)"></i>En contra ${contra}</span><span>Comentarios ${comentarios.length}</span></div>
+    ${comentarios.slice(0, 4).map(c => `<p class="coment">“${esc(c.comentario)}”</p>`).join('')}
+  </div>`;
+}
+
+function tarjetaNecesidades() {
+  const n = datos.necesidades, max = Math.max(1, ...n.map(x => x.total));
+  return `<div class="card"><h2>¿Qué necesitan los organismos?</h2>${n.length ? n.map(x => `
+    <div class="nec"><span>${esc(x.necesidad)}</span><div class="barra"><div style="width:${x.total / max * 100}%;background:var(--navy)"></div></div><b>${x.total}</b></div>`).join('')
+    : '<p style="margin:0">Todavía no hay registros.</p>'}</div>`;
+}
+
+// Flechas, AvPág/RePág y barra espaciadora: funcionan con un control remoto de presentaciones.
+addEventListener('keydown', e => {
+  if (!$('#sig') || e.target.closest('input, textarea')) return;
+  if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); mover(1); }
+  if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); mover(-1); }
+});
+
+$('#org').innerHTML = CONFIG.logo ? `<img src="${esc(CONFIG.logo)}" alt="${esc(CONFIG.organismo)}">` : `<b>${esc(CONFIG.organismo)}</b>`;
 $('#evento').textContent = CONFIG.evento;
-const ruta = () => location.hash === '#pantalla' ? pantalla() : participante();
+function esPantalla() { return location.hash.startsWith('#pantalla'); }
+function ruta() {
+  clearTimeout(timer);
+  pasoActual = datos = null;
+  esPantalla() ? pantalla() : participante();
+}
 addEventListener('hashchange', ruta);
 ruta();
 </script>
