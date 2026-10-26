@@ -4,6 +4,15 @@ Entrá a cada supertema, revisá sus temas asociados y votá una opción. Los qu
 
 Modo: libre
 
+## Registro: Registrate para participar
+Completá tus datos una sola vez. Después vas a poder responder sobre cada supertema.
+
+### Tus datos
+- Nombre *
+- Apellido *
+- Email *
+- Organismo *
+
 ## Población y sociedad
 Políticas destinadas a la población y asuntos vinculados con la estructura demográfica del país, composición y dinámica de la población, condiciones de vida y características culturales y de identidad.
 - Género y diversidad sexual
@@ -128,17 +137,3 @@ Asuntos vinculados con el personal y la conducción de las Fuerzas Armadas, la d
 - Fuerzas Armadas
 - Soberanía, protección y vigilancia
 - Riesgos y desastres
-
-## Registro: ¿Qué necesita tu organismo de nosotros?
-- Asistencia técnica
-- Capacitación
-- Publicación de datos
-- Normalización de datos
-- Uso de APIs
-- Otro
-
-### Tus datos
-- Nombre *
-- Apellido *
-- Email *
-- Organismo *

@@ -12,6 +12,7 @@ create table votos (
 
 create table registros (
   id bigint generated always as identity primary key,
+  participante uuid unique, -- el mismo de sus votos: une a cada persona con sus respuestas
   necesidades text[] not null default '{}' check (cardinality(necesidades) <= 30),
   datos jsonb not null default '{}' check (jsonb_typeof(datos) = 'object' and pg_column_size(datos) < 8000), -- campos de consulta.md
   creado timestamptz not null default now()

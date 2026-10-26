@@ -43,7 +43,8 @@ Una breve descripción (opcional).
 - Los `-` debajo de una pregunta son sus temas, que se muestran como etiquetas.
 - `## Registro: ...` es el formulario de registro. El texto después de `Registro:` es el título y los `-` son opciones para marcar (si no hay, no se muestran).
 - `### ...` dentro del registro empieza la lista de **datos a pedir**: cada `-` es un campo. Con `*` al final es obligatorio. Si el nombre incluye "mail", se valida como email. Los campos cambian según la ocasión sin tocar la base.
-- Los pasos se presentan en el orden del archivo: si querés el registro al principio, ponelo antes de las preguntas.
+- Los pasos se presentan en el orden del archivo. **Si el registro va antes de las preguntas, es obligatorio**: se pide apenas la persona escanea el QR (durante la bienvenida) y nadie puede responder sin registrarse, aunque llegue tarde.
+- Cada registro queda unido a los votos de esa persona (columna `participante`).
 
 No renombres una pregunta que ya se votó: los votos quedan atados a su título.
 Para validar el archivo antes de subirlo: `node test.js`.
@@ -88,10 +89,18 @@ Supabase pausa los proyectos gratuitos después de una semana sin actividad. Ent
 - Registros: los datos de cada persona quedan en la columna `datos`. Para tener una columna por campo, ejecutá algo así en el *SQL Editor* (con los nombres de tus campos) y exportá el resultado a CSV:
 
 ```sql
-select creado, array_to_string(necesidades, ', ') as opciones,
-       datos->>'Nombre' as nombre, datos->>'Apellido' as apellido,
+select creado, datos->>'Nombre' as nombre, datos->>'Apellido' as apellido,
        datos->>'Email' as email, datos->>'Organismo' as organismo
 from registros order by creado;
+```
+
+- Cada respuesta con los datos de quien la dio:
+
+```sql
+select r.datos->>'Nombre' as nombre, r.datos->>'Apellido' as apellido, r.datos->>'Organismo' as organismo,
+       v.pregunta, v.opcion, v.comentario, v.creado
+from votos v left join registros r using (participante)
+order by v.pregunta, v.creado;
 ```
 
 Los registros incluyen emails, así que no se pueden leer desde la web: solo se ven desde el panel de Supabase.

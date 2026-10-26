@@ -125,12 +125,12 @@ if (!pid) localStorage.setItem('pid', pid = crypto.randomUUID());
 // ---------- Datos: Supabase, o localStorage en modo demo ----------
 const sb = DEMO ? null : supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
 const ok = ({ data, error }) => { if (error) throw error; return data; };
-const YA_VOTO = '23505'; // violación de unique (pregunta, participante)
+const YA_EXISTE = '23505'; // violación de unique: ya votó esa pregunta o ya se registró
 
 // ponytail: modo demo en localStorage; solo ve los datos de este navegador (sirve con dos pestañas).
 function guardarDemo(k, fila) {
   const filas = leer(k);
-  if (k === 'votos' && filas.some(f => f.pregunta === fila.pregunta && f.participante === fila.participante)) throw { code: YA_VOTO };
+  if (filas.some(f => f.participante === fila.participante && f.pregunta === fila.pregunta)) throw { code: YA_EXISTE }; // registros: sin pregunta
   localStorage.setItem(k, JSON.stringify([{ ...fila, id: Date.now() + Math.random(), creado: new Date().toISOString() }, ...filas]));
 }
 
@@ -196,7 +196,11 @@ function participante() {
 
 const avisoDemo = () => DEMO ? '<p class="demo">Modo demo: los datos se guardan solo en este navegador.</p>' : '';
 
+// Si el registro va primero en consulta.md, se pide apenas entran (en la bienvenida) y es obligatorio para responder.
+const faltaRegistro = paso => C.pasos[0] === 'registro' && !localStorage.getItem('registrado') && paso !== 'fin';
+
 function vistaParticipante(paso) {
+  if (faltaRegistro(paso)) paso = 'registro';
   if (paso === 'lista') return vistaLista();
   const p = pregunta(paso);
   $('#app').innerHTML = avisoDemo() + (
@@ -285,7 +289,7 @@ function conectarFormularios() {
       boton.disabled = true;
       try { await api.votar({ pregunta: id, participante: pid, opcion, comentario: comentario || null }); }
       catch (err) {
-        if (err.code !== YA_VOTO) { boton.disabled = false; return mensaje(msg, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
+        if (err.code !== YA_EXISTE) { boton.disabled = false; return mensaje(msg, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
       }
       cerrar('¡Gracias! Mirá la pantalla para ver los resultados.');
     };
@@ -306,10 +310,13 @@ function conectarFormularios() {
       if (valor) datos[c.nombre] = valor;
     }
     reg.querySelector('button').disabled = true;
-    try { await api.registrar({ necesidades, datos }); }
-    catch { reg.querySelector('button').disabled = false; return mensaje(msg, 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
-    localStorage.setItem('registrado', '1');
-    reg.innerHTML = hecho('Recibimos tu registro. ¡Gracias!');
+    try { await api.registrar({ participante: pid, necesidades, datos }); }
+    catch (err) {
+      if (err.code !== YA_EXISTE) { reg.querySelector('button').disabled = false; return mensaje(msg, 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
+    }
+    localStorage.setItem('registrado', '1'); // YA_EXISTE = ya estaba registrado: lo tratamos como hecho
+    if (pasoActual !== 'registro') return vistaParticipante(pasoActual); // entró tarde: sigue a donde está la presentación
+    reg.innerHTML = hecho(C.pasos[0] === 'registro' ? '¡Listo! En unos momentos arrancamos.' : 'Recibimos tu registro. ¡Gracias!');
   };
 }
 
