@@ -156,14 +156,14 @@ flowchart LR
 
 ## Pantalla (`pantalla.html`)
 
-La página ocupa el alto de la ventana (`100vh`) y nunca tiene scroll: cada escena se ajusta al espacio.
+Las escenas cortas (bienvenida, registro, final) ocupan el alto de la ventana. Las largas (un resumen con muchas preguntas, un detalle con muchos textos) se recorren con scroll; al cambiar de paso o abrir y cerrar un detalle, la vista vuelve arriba.
 
 | Escena | Disposición |
 |---|---|
 | Bienvenida | Centrada. Izquierda (hasta `50rem`): rótulo, `.titulo-grande`, "Sumate desde tu celular: escaneá el código QR.", "Código:" con el código en `3.5rem` y `--acento-texto`. Derecha: QR de `min(45vh, 30vw)` sobre `--superficie` con relleno `1rem`. Separación `4rem`. |
 | Cabeza (resto de escenas) | Título con filete a la izquierda. A la derecha, "Código" y el código (`1.5rem`, `--acento-texto`) junto a un QR de `4rem`. |
 | Resumen | Grilla de tarjetas `.mini` (ver abajo). |
-| Detalle de una pregunta | Total en `3rem` y `--acento-texto`. Barras en `1.5rem` (valor `1.75rem`, pista `1.25rem`), en el orden de la configuración. Si hay textos, columna derecha (`3fr 2fr`) con hasta 8, recortados a 3 líneas, borde izquierdo `.375rem` en acento. |
+| Detalle de una pregunta | Total en `3rem` y `--acento-texto`. Barras en `1.5rem` (valor `1.75rem`, pista `1.25rem`), en el orden de la configuración. Si hay textos, columna derecha (`3fr 2fr`) con todos, del más reciente al más viejo, completos, borde izquierdo `.375rem` en acento. |
 | Registro | Número de personas registradas en `8rem` y `--acento-texto`. |
 | Final | Título y texto de cierre configurados, centrados. |
 
@@ -171,16 +171,14 @@ La página ocupa el alto de la ventana (`100vh`) y nunca tiene scroll: cada esce
 
 | Regla | Valor |
 |---|---|
-| Columnas y filas | `js/resultados.js` `grillaPara`: la proporción de cada celda más cercana a 1.8; ante empate, menos filas. |
-| Alto máximo de la grilla | `filas × 15rem` más los espacios. Con pocas preguntas las tarjetas no se estiran. |
+| Columnas | `repeat(auto-fill, minmax(18rem, 1fr))`: 4 columnas a 1280 y a 1920 de ancho. |
 | Tarjeta | Relleno `.625rem .875rem`, separación interna `.25rem`, borde 1 px `--borde`; al pasar el mouse, `--borde-campo`. |
-| Título | 700, 2 líneas como máximo. |
-| Páginas | Más de 8 preguntas: páginas de 8 y el resto en la última (`js/resultados.js` `paginar`; 14 → 8 + 6). Rótulo "Página 1 de 2" sobre el título y "· 1 de 2" en la barra de controles. La página es de esta pantalla y vuelve a 1 al cambiar de paso. |
+| Título | 700, completo. |
 | Filas de opción | Una línea: opción (hasta 45 % del ancho, con puntos suspensivos) · pista `.625rem` · porcentaje `1.125rem`. En el orden de la configuración, igual que el detalle. |
 | Colores | Opción con más respuestas en `--color-acento`. El resto en `--barra-secundaria`. Si hay empate, todas las empatadas en acento. Las opciones en 0 % se muestran. |
-| Opciones que no entran | `ajustarGrilla` oculta primero las de menos respuestas (nunca la líder), deja las demás en su orden y agrega "· +N opciones" al total. Se recalcula al cambiar el tamaño de la ventana y al cargar la tipografía. |
+| Muchas preguntas | Se muestran todas con todas sus opciones; lo que no entra en la ventana se recorre con scroll. |
 | Pregunta de texto libre | "Respuesta libre" en lugar de barras. |
-| Pie | "N respuestas", `1rem`, `--texto-suave`. |
+| Pie | "N respuestas", `1rem`, `--texto-suave`, al fondo de la tarjeta (las tarjetas de una fila tienen el mismo alto). |
 
 ### Controles de quien presenta
 
@@ -188,7 +186,7 @@ Solo aparecen con una sesión de administración iniciada o con `?demo`.
 
 | Elemento | Comportamiento |
 |---|---|
-| Barra `#controles` | Fija abajo sobre `--color-principal`: "← Anterior", nombre del paso, "Siguiente →" ("Finalizar" antes del final). En un resumen con páginas, primero pasan de página y en la última cambian de paso; lo mismo con el teclado. |
+| Barra `#controles` | Fija abajo sobre `--color-principal`: "← Anterior", nombre del paso, "Siguiente →" ("Finalizar" antes del final). Siempre cambian de paso. La rueda del mouse o el trackpad recorren la escena. |
 | Al abrir | Visible 3 s y después se oculta. |
 | Mouse | Aparece cuando el puntero entra en la franja de la barra. Se oculta 400 ms después de que sale. El cursor nunca se oculta. |
 | Teclado | →, AvPág y espacio avanzan. ←, RePág retroceden. Esc cierra el detalle. Tener la tecla apretada no repite el avance. |
@@ -211,11 +209,11 @@ Con `prefers-reduced-motion: reduce` las cuatro se desactivan: las barras saltan
 | Caso | Comportamiento |
 |---|---|
 | Pregunta sin respuestas | Barras en 0 % y "0 respuestas". |
-| Título largo en el resumen | 2 líneas y puntos suspensivos. |
+| Título largo en el resumen | Completo, en varias líneas. |
 | Nombre de opción largo en el resumen | Una línea con puntos suspensivos. En el detalle se muestra completo. |
-| 6 opciones y muchas preguntas | El resumen se pagina de a 8 como máximo. Si aun así no entran, se ocultan las de menos respuestas y el pie avisa cuántas faltan. El detalle las muestra todas. |
-| Descripción larga en la pantalla | 2 líneas. En el celular, 3 líneas y "Ver más". |
-| Más de 8 textos en el detalle | Se muestran los 8 más recientes. |
+| 6 opciones y muchas preguntas | Todas visibles; la escena se recorre con scroll. |
+| Descripción larga | En la pantalla, completa. En el celular, 3 líneas y "Ver más". |
+| Muchos textos en el detalle | Se muestran todos, del más reciente al más viejo; la escena se recorre con scroll. |
 | Código largo (hasta 30 caracteres) | En una línea, sin cortar en el guion. |
 | Sesión archivada mientras se presenta | La pantalla deja de responder a teclas y respuestas sin errores. |
 | Reinicio de resultados | Las respuestas de la ronda anterior se descartan al recibir el cambio. |

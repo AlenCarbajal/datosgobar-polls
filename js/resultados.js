@@ -21,19 +21,3 @@ export function contar(config, respuestas) {
   }
   return out;
 }
-
-// Columnas que dejan las celdas lo más cerca posible de una proporción 1,8:1.
-export function grillaPara(n, ancho, alto) {
-  let mejor = null;
-  for (let columnas = 1; columnas <= n; columnas++) {
-    const filas = Math.ceil(n / columnas);
-    const d = Math.abs((ancho / columnas) / (alto / filas) - 1.8);
-    if (!mejor || d < mejor.d - 1e-9 || (Math.abs(d - mejor.d) <= 1e-9 && filas < mejor.filas)) mejor = { columnas, filas, d };
-  }
-  return { columnas: mejor.columnas, filas: mejor.filas };
-}
-
-// Tamaño de cada página del resumen: llenas de a `max` y el resto en la última (14 → 8 + 6).
-export function paginar(n, max = 8) {
-  return Array.from({ length: Math.max(1, Math.ceil(n / max)) }, (_, i) => Math.min(max, n - i * max));
-}

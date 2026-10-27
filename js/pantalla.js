@@ -3,14 +3,13 @@
 import { CONFIG } from '../config.js';
 import { $, esc, dibujarQr, cargarSesion } from './ui.js';
 import { normalizarCodigo, codigoValido, pasosDeSesion, opcionesDe } from './sesion.js';
-import { contar, grillaPara, paginar } from './resultados.js';
+import { contar } from './resultados.js';
 import { aplicarTema, resolverEstetica } from './tema.js';
 
 const escena = $('#escena');
 let api, sesion, codigo, demo = false, manda = false, timer, ocultar;
 let respuestas = [], inscriptos = 0, presentes = null;
 let detalle = null;   // pregunta abierta desde un resumen (solo en esta pantalla)
-let pagina = 0;       // página del resumen (solo en esta pantalla); vuelve a 0 al cambiar de paso
 let ultimoCambio = 0; // una lectura que salió antes de terminar un cambio de paso trae el paso viejo: se ignora
 let enCurso = 0;      // cambios de paso sin confirmar
 const qrGrande = document.createElement('div'), qrChico = document.createElement('div'); // se dibujan una vez y se mueven
@@ -57,7 +56,7 @@ function cabeza(titulo, eyebrow = '', descripcion = '', volver = false) {
 }
 
 // La opción con más respuestas va en el color de acento; las demás, en el secundario.
-const barra = (o, max) => `<div class="barra${o.n === max ? '' : ' barra--secundaria'}" style="--valor: ${o.pct}%" data-n="${o.n}"><span>${esc(o.texto)}</span>`
+const barra = (o, max) => `<div class="barra${o.n === max ? '' : ' barra--secundaria'}" style="--valor: ${o.pct}%"><span>${esc(o.texto)}</span>`
   + `<b>${o.pct}% <span class="suave">· ${o.n}</span></b><span class="barra__pista"></span></div>`;
 const barras = (opciones) => opciones.map(o => barra(o, Math.max(...opciones.map(x => x.n)))).join('');
 
@@ -67,7 +66,7 @@ function resultado(q, c) {
       <p class="total"><b>${total}</b> ${total === 1 ? 'respuesta' : 'respuestas'}</p>
       ${barras(opciones)}
     </div>
-    ${textos.length ? `<ul class="textos" aria-label="Textos más recientes">${textos.slice(0, 8).map(t => `<li>“${esc(t)}”</li>`).join('')}</ul>` : ''}
+    ${textos.length ? `<ul class="textos" aria-label="Textos más recientes">${textos.map(t => `<li>“${esc(t)}”</li>`).join('')}</ul>` : ''}
   </div>`;
 }
 
@@ -85,7 +84,6 @@ function dibujar() {
   const corta = location.host + location.pathname.replace(/[^/]*$/, 'participar.html') + '?s=' + codigo;
   const resumible = paso === 'cierre' ? todas(config) : p?.tipo === 'lista' ? p.preguntas : null;
   const i = resumible ? resumible.findIndex(q => q.id === detalle) : -1;
-  const { paginas, visibles } = paginaDe(resumible);
   if (!qrGrande.childElementCount) {
     const destino = location.protocol + '//' + corta + (demo ? '&demo' : '');
     dibujarQr(qrGrande, destino, 512);
@@ -96,46 +94,14 @@ function dibujar() {
     : i >= 0 ? cabeza(resumible[i].texto, paso === 'cierre' ? `Resumen · ${i + 1} de ${resumible.length}` : `${p.titulo} · ${i + 1} de ${resumible.length}`,
         resumible[i].descripcion, true) + resultado(resumible[i], c)
     : resumible ? cabeza(paso === 'cierre' ? 'Resumen' : p.titulo,
-        [paso === 'cierre' ? config.titulo : '', paginas > 1 ? `Página ${pagina + 1} de ${paginas}` : ''].filter(Boolean).join(' · '))
-        + (visibles.length ? `<div class="resumen">${visibles.map(q => mini(q, c)).join('')}</div>` : '')
+        paso === 'cierre' ? config.titulo : '')
+        + (resumible.length ? `<div class="resumen">${resumible.map(q => mini(q, c)).join('')}</div>` : '')
     : p.tipo === 'registro' ? cabeza(p.titulo) + `<div class="grande"><span class="numero">${inscriptos}</span>
         <p>${inscriptos === 1 ? 'persona registrada' : 'personas registradas'}</p></div>`
     : cabeza(p.pregunta.texto, 'Pregunta', p.pregunta.descripcion) + resultado(p.pregunta, c);
   $('#qr-grande')?.append(qrGrande);
   $('#qr-chico')?.append(qrChico);
-  ajustarGrilla();
   controles();
-}
-
-// Resumen en páginas de 8 preguntas (paginar); el detalle sigue contando sobre todas.
-function paginaDe(resumible) {
-  const tamaños = paginar(resumible?.length ?? 0);
-  pagina = Math.min(pagina, tamaños.length - 1);
-  const desde = tamaños.slice(0, pagina).reduce((a, n) => a + n, 0);
-  return { paginas: tamaños.length, visibles: resumible?.slice(desde, desde + tamaños[pagina]) ?? [] };
-}
-const enResumen = () => !detalle && (pasoActual() === 'cierre' || pasoDe(pasoActual())?.tipo === 'lista');
-const paginasDelPaso = () => enResumen() ? paginar((pasoActual() === 'cierre' ? todas(sesion.config) : pasoDe(pasoActual()).preguntas).length).length : 1;
-
-function ajustarGrilla() {
-  const g = $('.resumen');
-  if (!g) return;
-  const { columnas, filas } = grillaPara(g.childElementCount, g.clientWidth, g.clientHeight);
-  g.style.gridTemplateColumns = `repeat(${columnas}, minmax(0, 1fr))`;
-  g.style.gridTemplateRows = `repeat(${filas}, minmax(0, 1fr))`;
-  g.style.maxHeight = `calc(${filas} * 15rem + ${filas - 1} * .75rem)`; // con pocas preguntas, tarjetas de hasta 15rem
-  for (const b of g.querySelectorAll('.mini__barras')) {
-    const filas = [...b.children], total = b.parentElement.querySelector('.mini__total');
-    filas.forEach(f => { f.hidden = false; });
-    // Si no entran, se ocultan primero las de menos respuestas (nunca la líder) y las demás quedan en su orden.
-    const ocultas = [];
-    while (b.scrollHeight > b.clientHeight + 1 && ocultas.length < filas.length - 1) {
-      const menor = filas.filter(f => !f.hidden).reduce((a, f) => Number(f.dataset.n) <= Number(a.dataset.n) ? f : a);
-      menor.hidden = true; ocultas.push(menor);
-    }
-    if (ocultas.length) total.dataset.mas = `+${ocultas.length} ${ocultas.length === 1 ? 'opción' : 'opciones'}`;
-    else delete total.dataset.mas;
-  }
 }
 
 // Con respuestas nuevas: en la bienvenida solo cambia el contador; el resto se redibuja.
@@ -148,8 +114,7 @@ function controles() {
   $('#ant').disabled = i === 0;
   $('#sig').hidden = pasos[i] === 'final';
   $('#sig').textContent = pasos[i + 1] === 'final' ? 'Finalizar' : 'Siguiente →';
-  const n = paginasDelPaso();
-  $('#paso-nombre').textContent = nombrePaso(pasos[i]) + (n > 1 ? ` · ${pagina + 1} de ${n}` : '');
+  $('#paso-nombre').textContent = nombrePaso(pasos[i]);
 }
 
 // Visible mientras el mouse está sobre la barra (o hay foco de teclado en ella); al salir, se oculta.
@@ -159,14 +124,12 @@ function mostrarControles(cerca = true) {
   else ocultar = setTimeout(() => document.body.classList.add('quieto'), 400);
 }
 
-function ver(paso) { sesion = { ...sesion, paso }; detalle = null; pagina = 0; dibujar(); }
+function ver(paso) { sesion = { ...sesion, paso }; detalle = null; dibujar(); scrollTo(0, 0); }
 
 // Escrituras en cola: una a la vez y, si mientras tanto se pulsó de nuevo, solo el último destino.
 let destino = null, escribiendo = false, confirmado;
 async function mover(delta) {
   if (!sesion) return;
-  const otra = pagina + delta; // en un resumen con páginas, primero se pasa de página
-  if (enResumen() && otra >= 0 && otra < paginasDelPaso()) { pagina = otra; dibujar(); return; }
   const pasos = pasosDeSesion(sesion.config), anterior = pasoActual();
   const nuevo = pasos[Math.min(pasos.length - 1, Math.max(0, pasos.indexOf(anterior) + delta))];
   if (nuevo === anterior) return;
@@ -224,10 +187,12 @@ function recibir(s, inicio) {
   if (!sesion) return; // se archivó y ya no hay nada que mostrar
   if (enCurso || inicio <= ultimoCambio) s = { ...s, paso: sesion.paso }; // lectura vieja: el paso local manda
   const reinicio = s.ronda !== sesion.ronda, tema = JSON.stringify(s.config.estetica) !== JSON.stringify(sesion.config.estetica);
-  if (s.paso !== sesion.paso) { detalle = null; pagina = 0; }
+  const otroPaso = s.paso !== sesion.paso;
+  if (otroPaso) detalle = null;
   sesion = s;
   if (tema) { aplicarTema(s.config.estetica); pintarMarca(); }
   dibujar();
+  if (otroPaso) scrollTo(0, 0);
   if (reinicio) { respuestas = []; refrescar(); } // se borraron las respuestas: vaciar y traer la lista nueva
 }
 
@@ -298,11 +263,9 @@ try {
     dibujar();
     escena.addEventListener('click', e => { // abrir una pregunta del resumen, o volver
       const b = e.target.closest('[data-detalle]');
-      if (b) { detalle = b.dataset.detalle || null; dibujar(); }
+      if (b) { detalle = b.dataset.detalle || null; dibujar(); scrollTo(0, 0); }
     });
-    addEventListener('keydown', e => { if (e.key === 'Escape' && sesion && detalle) { detalle = null; dibujar(); } });
-    addEventListener('resize', ajustarGrilla);
-    document.fonts?.ready.then(ajustarGrilla); // la tipografía del tema cambia cuánto entra en cada tarjeta
+    addEventListener('keydown', e => { if (e.key === 'Escape' && sesion && detalle) { detalle = null; dibujar(); scrollTo(0, 0); } });
     api.escuchar(sesion.id, { alSesion: s => recibir(s, Date.now()), alRespuesta, alPresentes, comoPantalla: true });
     refrescar();
     manda = demo || await api.esAdmin().catch(() => false);
