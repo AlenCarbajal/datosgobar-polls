@@ -7,6 +7,7 @@
   /* Paleta (valores del preset neutro; cada preset los redefine) */
   --color-principal: #1F2937;
   --color-acento: #2563EB;
+  --color-secundario: var(--color-acento); /* segundo color de marca: rótulos, filete de títulos, barras no líderes */
   --texto-sobre-principal: #FFFFFF;
   --texto-sobre-acento: #FFFFFF;
   --fondo: #F6F7F9;
@@ -26,7 +27,8 @@
   --aviso-suave: color-mix(in srgb, var(--aviso) 12%, var(--superficie));
   /* Acento usado como texto sobre fondo claro: oscurecido para que un acento claro (amarillo) siga legible */
   --acento-texto: color-mix(in srgb, var(--color-acento) 45%, var(--texto));
-  --barra-secundaria: color-mix(in srgb, var(--color-acento) 45%, var(--superficie));
+  --secundario-texto: color-mix(in srgb, var(--color-secundario) 65%, var(--texto));
+  --barra-secundaria: color-mix(in srgb, var(--color-secundario) 45%, var(--superficie));
   /* Anillo de foco: el acento oscurecido, así un acento claro sigue dando ≥ 3:1 */
   --foco: var(--acento-texto);
 
@@ -77,8 +79,16 @@ h2 { font-size: 1.125rem; font-weight: 800; line-height: 1.3; margin: 0 0 .875re
 /* Rótulo chico sobre un título ("Pregunta 3 de 14") */
 .eyebrow {
   font-size: .8125rem; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
-  color: var(--acento-texto); margin: .5rem 0;
+  color: var(--secundario-texto); margin: .5rem 0;
 }
+
+/* Títulos principales: filete corto en el color secundario */
+#app > h1::after, .espera h1::after, .cabeza h1::after, .titulo-grande::after {
+  content: ''; display: block; width: 2.5rem; height: .25rem; margin-top: .5rem;
+  background: var(--color-secundario); border-radius: calc(var(--radio) * 99);
+}
+.espera h1::after { margin-inline: auto; }
+#evento { color: color-mix(in srgb, var(--color-secundario) 35%, var(--texto-sobre-principal)); }
 
 .etiquetas { display: flex; flex-wrap: wrap; gap: .375rem; list-style: none; padding: 0; margin: 0 0 1rem; }
 .etiqueta {

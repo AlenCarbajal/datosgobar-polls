@@ -5,9 +5,9 @@
 :root {
   --color-principal: #232D4F;  /* navy */
   --color-acento: #0072BB;     /* azul Poncho */
-  --violeta: #B369ED;
+  --color-secundario: #B369ED; /* violeta */
   --tile: #E8E9F1;
-  --fondo: #F5F6FA;
+  --fondo: #F6F4FC;
   --superficie: #FFFFFF;
   --borde: #D5D8E3;
   --borde-campo: #7A8099;
@@ -19,7 +19,7 @@
   --fuente: 'Montserrat', system-ui, sans-serif;
 
   --principal-suave: var(--tile);
-  --barra-secundaria: var(--violeta);
+  --barra-secundaria: var(--color-secundario);
   --foco: var(--color-acento); /* 5.1:1 sobre blanco */
 }
 
