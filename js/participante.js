@@ -11,14 +11,27 @@ let pid, api, sesion, demo = false, codigo, timer, dejar;
 let pedido = 0, version = 0; // ver sondear()
 let pendiente = null; // sesión nueva que llegó con un formulario a medio completar: se aplica al enviar o volver
 let elegida = null;   // paso lista: pregunta abierta en este celular
+let enLinea = true;   // última consulta a la base: respondió o falló
 
 // Marcas locales: incluyen la ronda, así "Reiniciar" en admin las olvida.
 const marcado = (...partes) => localStorage.getItem(claveLocal(sesion, ...partes)) === '1';
 const marcar = (...partes) => localStorage.setItem(claveLocal(sesion, ...partes), '1');
+// Lo que esta persona respondió, para mostrarlo en solo lectura: { opcion_id, texto }, o { ya: true } si ya estaba respondida.
+const guardarRespuesta = (id, r) => localStorage.setItem(claveLocal(sesion, 'respuesta', id), JSON.stringify(r));
+const respuestaGuardada = (id) => { try { return JSON.parse(localStorage.getItem(claveLocal(sesion, 'respuesta', id))); } catch { return null; } };
 
 const aviso = () => demo ? '<p class="mensaje mensaje--aviso">Modo de prueba: las respuestas se guardan solo en este navegador.</p>' : '';
-const espera = (titulo, texto = '', antes = '') =>
-  `<div class="espera"><div class="pulso" aria-hidden="true"></div>${antes}<h1>${titulo}</h1>${texto ? `<p class="suave">${texto}</p>` : ''}</div>`;
+const espera = (titulo, texto = '', antes = '', despues = '') =>
+  `<div class="espera"><div class="pulso" aria-hidden="true"></div>${antes}<h1>${titulo}</h1>${texto ? `<p class="suave">${texto}</p>` : ''}${despues}</div>`;
+// Estado de la conexión en texto (el punto solo acompaña). En el modo de prueba no hay base: no se muestra.
+const textoConexion = () => enLinea ? 'Conectado' : 'Reconectando…';
+const conexion = () => demo ? '' : `<p class="conexion${enLinea ? '' : ' conexion--caida'}" role="status">${textoConexion()}</p>`;
+function cambiarConexion(ok) {
+  if (ok === enLinea) return; // solo se reescribe al cambiar: el lector de pantalla no lo repite cada 10 s
+  enLinea = ok;
+  const el = $('.conexion');
+  if (el) { el.classList.toggle('conexion--caida', !ok); el.textContent = textoConexion(); }
+}
 const hecho = (texto) => `<p class="hecho"><span aria-hidden="true">✓</span> ${texto}</p>`;
 const reducido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -100,11 +113,14 @@ function conectarRegistro(form) {
     }
     if (primero) return primero.focus();
     const boton = form.querySelector('[type=submit]');
-    boton.disabled = true;
+    Object.assign(boton, { disabled: true, textContent: 'Registrando…' });
     const { ronda } = sesion;
     try { await api.inscribir({ sesion_id: sesion.id, participante: pid, datos }); }
     catch (err) {
-      if (err?.code !== YA_EXISTE) { boton.disabled = false; return mensaje($('#msg'), 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.'); }
+      if (err?.code !== YA_EXISTE) {
+        Object.assign(boton, { disabled: false, textContent: 'Registrar' });
+        return mensaje($('#msg'), 'No pudimos guardar el registro. Revisá la conexión y probá de nuevo.');
+      }
     }
     if (sesion?.ronda !== ronda) return; // se reinició mientras se enviaba: ya se re-dibujó, no marcar
     marcar('inscripto');
@@ -115,9 +131,18 @@ function conectarRegistro(form) {
 // ---------- Preguntas ----------
 const etiquetas = (lista) => lista.map(t => `<li class="etiqueta">${esc(t)}</li>`).join('');
 
+// Pregunta ya respondida: lo que eligió y escribió, sin formulario (la base no deja cambiar una respuesta).
+function leida(q, opciones) {
+  const r = respuestaGuardada(q.id), op = opciones.find(o => o.id === r?.opcion_id);
+  const cuerpo = r?.ya ? '<p role="status">Ya habías respondido esta pregunta.</p>'
+    : !r ? hecho('Ya respondiste esta pregunta.')
+    : `<p class="campo">Tu respuesta</p>${op ? hecho(esc(op.texto)) : ''}${r.texto ? `<p class="leida__texto">${esc(r.texto)}</p>` : ''}`;
+  return `<div class="tarjeta leida"><h2 tabindex="-1">${esc(q.texto)}</h2>${cuerpo}
+    <p class="suave">Las respuestas no se pueden cambiar.</p></div>`;
+}
+
 function formPregunta(q, opciones = []) {
-  if (marcado('votado', q.id)) return `<div class="tarjeta"><h2>${esc(q.texto)}</h2>
-    ${hecho('Ya registramos tu respuesta. Mirá la pantalla para ver los resultados.')}</div>`;
+  if (marcado('votado', q.id)) return leida(q, opciones);
   const et = q.etiquetas || [];
   return `<form class="tarjeta pregunta" id="pregunta" data-pregunta="${esc(q.id)}" novalidate>
     <h2>${esc(q.texto)}</h2>
@@ -182,16 +207,22 @@ function conectarPregunta(form) {
       mensaje(msg, radios.length ? 'Escribí tu comentario antes de enviar.' : 'Escribí tu respuesta antes de enviar.');
       return texto.focus();
     }
-    enviar.disabled = true; // doble toque: un solo envío
-    const { ronda } = sesion;
-    try { await api.responder({ sesion_id: sesion.id, pregunta_id: id, participante: pid, opcion_id: elegido?.value ?? null, texto: t || null }); }
+    Object.assign(enviar, { disabled: true, textContent: 'Enviando…' }); // doble toque: un solo envío
+    const { ronda } = sesion, respuesta = { opcion_id: elegido?.value ?? null, texto: t || null };
+    let ya = false;
+    try { await api.responder({ sesion_id: sesion.id, pregunta_id: id, participante: pid, ...respuesta }); }
     catch (err) {
-      if (err?.code !== YA_EXISTE) { enviar.disabled = false; return mensaje(msg, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.'); }
+      if (err?.code !== YA_EXISTE) {
+        Object.assign(enviar, { disabled: false, textContent: 'Enviar' });
+        return mensaje(msg, 'No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo.');
+      }
+      ya = true; // respondida antes (otro dispositivo o datos borrados): queda la respuesta original
     }
     if (sesion?.ronda !== ronda) return; // se reinició mientras se enviaba: ya se re-dibujó, no marcar
     marcar('votado', id);
+    guardarRespuesta(id, ya ? { ya: true } : respuesta);
     const enLista = elegida !== null;
-    elegida = null; // en una lista vuelve a la lista, con esta en verde
+    if (!ya) elegida = null; // en una lista vuelve a la lista, con esta en verde; si ya estaba, muestra el aviso
     seguir();
     if (enLista) scrollTo(0, 0);
   };
@@ -206,6 +237,7 @@ function lista(paso) {
   return `<h1>${esc(paso.titulo)}</h1>
     <p class="progreso-texto" id="progreso">${hechas} de ${qs.length} respondidas</p>
     <progress class="progreso" value="${hechas}" max="${qs.length}" aria-labelledby="progreso"></progress>
+    ${conexion()}
     <ul class="lista">${qs.map(q => {
       const ok = marcado('votado', q.id);
       return `<li><button type="button" class="item${ok ? ' item--hecho' : ''}" data-id="${esc(q.id)}">
@@ -225,8 +257,8 @@ function dibujar() {
     html = (paso === 'inicio' ? bienvenida : '') + formRegistro(primero); // se registran mientras esperan
   else if (paso === 'inicio')
     html = espera(esc(config.titulo), `${esc(config.instrucciones)} Cuando empiece, vas a ver acá cada pregunta sin recargar la página.`,
-      encabezado ? `<p class="eyebrow">${esc(encabezado)}</p>` : '');
-  else if (paso === 'cierre') html = espera('¡Gracias! Mirá la pantalla.');
+      encabezado ? `<p class="eyebrow">${esc(encabezado)}</p>` : '', conexion());
+  else if (paso === 'cierre') html = espera('¡Gracias! Mirá la pantalla.', '', '', conexion());
   else if (paso === 'final') html = `<div class="espera"><h1>${esc(config.final.titulo)}</h1><p class="suave">${esc(config.final.texto)}</p></div>`;
   else {
     const p = config.pasos.find(x => x.id === paso);
@@ -235,7 +267,7 @@ function dibujar() {
   app.innerHTML = aviso() + html;
 
   $('#volver')?.addEventListener('click', () => { elegida = null; seguir(); scrollTo(0, 0); });
-  app.querySelectorAll('.item').forEach(b => b.onclick = () => { elegida = b.dataset.id; dibujar(); scrollTo(0, 0); });
+  app.querySelectorAll('.item').forEach(b => b.onclick = () => { elegida = b.dataset.id; dibujar(); scrollTo(0, 0); $('.leida h2')?.focus(); });
   if ($('#pregunta')) conectarPregunta($('#pregunta'));
   if ($('#registro')) conectarRegistro($('#registro'));
   const form = app.querySelector('form');
@@ -279,7 +311,9 @@ function recibir(s) {
   if (!sesion) return;
   if (!s || s.archivada) {
     sesion = null; clearTimeout(timer); dejar?.();
-    return formCodigo('No encontramos una sesión activa con ese código.');
+    // Archivada (para el público una sesión archivada deja de existir) o borrada mientras participaba.
+    app.innerHTML = '<div class="espera"><h1>La actividad terminó</h1><p class="suave">Gracias por participar.</p></div>';
+    return;
   }
   if (igual(s, sesion)) pendiente = null;
   // Un reinicio (ronda nueva) se aplica ya. Un cambio de paso espera solo si hay texto escrito o datos de registro;
@@ -298,6 +332,7 @@ async function sondear() {
   let s;
   try { s = await api.sesionPorCodigo(codigo); } catch { /* sin conexión: el próximo intento lo resuelve */ }
   if (n !== pedido) return; // empezó otra consulta: esa sigue la cadena
+  cambiarConexion(s !== undefined);
   if (s !== undefined && v === version) recibir(s);
   clearTimeout(timer);
   if (sesion) timer = setTimeout(sondear, 10000);
@@ -321,6 +356,8 @@ try {
     dibujar();
     dejar = api.escuchar(sesion.id, { alSesion: (s) => { version++; recibir(s); }, participante: pid });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) sondear(); }); // al desbloquear el celular
+    addEventListener('offline', () => cambiarConexion(false));
+    addEventListener('online', sondear);
     timer = setTimeout(sondear, 10000);
   } else {
     pintarMarca();

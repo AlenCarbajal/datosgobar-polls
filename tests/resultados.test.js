@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contar, grillaPara } from '../js/resultados.js';
+import { contar, grillaPara, paginar } from '../js/resultados.js';
 import { cfg } from './fixture.js';
 
 test('contar usa el total de respuestas, incluida la opción con texto', () => {
@@ -27,4 +27,12 @@ test('grillaPara', () => {
   assert.deepEqual(grillaPara(14, 1600, 800), { columnas: 4, filas: 4 });
   assert.deepEqual(grillaPara(6, 1600, 900), { columnas: 3, filas: 2 });
   assert.deepEqual(grillaPara(1, 1600, 800), { columnas: 1, filas: 1 });
+});
+
+test('paginar: páginas parejas de hasta 8', () => {
+  assert.deepEqual(paginar(3), [3]);
+  assert.deepEqual(paginar(8), [8]);
+  assert.deepEqual(paginar(9), [5, 4]);
+  assert.deepEqual(paginar(14), [7, 7]);
+  assert.deepEqual(paginar(17), [6, 6, 5]);
 });

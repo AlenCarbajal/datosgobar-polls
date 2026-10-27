@@ -52,7 +52,8 @@ Se calculan en `css/base.css` a partir de la paleta. Un preset puede pisarlos.
 | `--texto-sobre-acento` | blanco u oscuro según contraste (`js/tema.js`) | `#FFFFFF` | Texto sobre `--color-acento`. |
 | `--acento-texto` | 45 % acento + 55 % `--texto` | `#134C80` | Acento usado como texto o borde sobre fondo claro: código de sesión, números grandes, "Responder →", enlaces, borde de opción elegida. |
 | `--secundario-texto` | 65 % secundario + 35 % `--texto` | `#8154B6` | Rótulos (`.eyebrow`). |
-| `--principal-suave` | 10 % principal sobre `--superficie` | `#E8E9F1` | Pista de barras y de progreso, etiquetas. |
+| `--principal-suave` | 10 % principal sobre `--superficie` | `#E8E9F1` | Etiquetas. |
+| `--pista` | `--principal-suave`; en la pantalla, 15 % principal sobre `--superficie` | `#E8E9F1` (pantalla `#DEE0E5`) | Pista de barras y de progreso. Más marcada en el proyector, que lava los colores. |
 | `--acento-suave` | 12 % acento sobre `--superficie` | — | Fondo de la opción elegida. |
 | `--exito-suave` | 10 % éxito sobre `--superficie` | — | Fondo de ítem respondido. |
 | `--aviso-suave` | 12 % aviso sobre `--superficie` | — | Fondo de `.mensaje--aviso`. |
@@ -85,10 +86,10 @@ Se calculan en `css/base.css` a partir de la paleta. Un preset puede pisarlos.
 | Tarjeta | `.tarjeta` | relleno `1.25rem` (`1rem` debajo de 480 px) | Borde 1 px `--borde`. |
 | Rótulo | `.eyebrow` | ver tipografía | Color `--secundario-texto`. |
 | Filete de título | `::after` de `#app > h1`, `.espera h1`, `.cabeza h1`, `.titulo-grande` | `2.5rem` × `.25rem`, `.5rem` bajo el título | Color `--color-secundario`. Centrado en `.espera`. |
-| Opción | `.opcion` (radio oculto + `span`) | alto mínimo 44 px, relleno `.75rem`, borde 2 px `--borde-campo`; círculo de `1.375rem` | Grilla `auto-fit, minmax(9.5rem, 1fr)`; en la pregunta del celular `minmax(7.5rem, 1fr)`. |
+| Opción | `.opcion` (radio oculto + `span`) | alto mínimo 44 px, relleno `.75rem`, borde 2 px `--borde-campo`; círculo de `1.375rem` | Grilla `auto-fit, minmax(9.5rem, 1fr)`; en la pregunta del celular, una sola columna (alturas parejas y lectura de arriba abajo). |
 | Campo | `input`, `textarea`, `select` | alto mínimo 44 px, relleno `.625rem`, borde 2 px | `textarea` alto mínimo `5rem`. |
 | Etiqueta | `.etiqueta` | relleno `.25rem .625rem`, `.8125rem` | Fondo `--principal-suave`. |
-| Progreso | `progress.progreso` | `.5rem` de alto | Valor en `--color-acento`. |
+| Progreso | `progress.progreso` | `.5rem` de alto | Valor en `--color-acento`, fondo `--pista`. |
 | Barra de resultado | `.barra` + `.barra__pista` con `--valor: N%` | pista `.625rem` (pantalla `1.25rem`) | Opción y valor en la primera línea, pista debajo. `.barra--secundaria` usa `--barra-secundaria`. |
 
 Barra de resultado:
@@ -115,9 +116,11 @@ flowchart LR
 |---|---|
 | Ingresar código | Campo con validación `^[a-z0-9-]{3,30}$`. Solo aparece sin `?s=` en la dirección. |
 | Registro | Campos definidos por la sesión. Si es obligatorio, bloquea el resto desde la bienvenida. |
-| Espera | `.espera`: punto `.pulso` de `.875rem` en acento, título con filete centrado, texto suave. |
-| Lista | Título, "N de M respondidas", `progress`, lista de `.item`. |
-| Pregunta | Barra superior con "← Volver", título `h2`, descripción (3 líneas, "Ver más"), etiquetas, opciones, caja de texto y "Enviar". |
+| Espera | `.espera`: punto `.pulso` de `.875rem` en acento, título con filete centrado, texto suave y línea de conexión. |
+| Lista | Título, "N de M respondidas", `progress`, línea de conexión, lista de `.item`. |
+| Pregunta | Barra superior con "← Lista" y "N de M", título `h2`, descripción (3 líneas, "Ver más"), etiquetas, opciones en una columna, caja de texto y "Enviar" fijo abajo. |
+| Respondida | `.leida`, sin formulario: título, "Tu respuesta", la opción con "✓" en `--exito`, el comentario si lo hubo y "Las respuestas no se pueden cambiar." en `--texto-suave`. Sin datos en este navegador: "Ya respondiste esta pregunta." |
+| Terminada | `.espera` sin punto: "La actividad terminó" y "Gracias por participar." Aparece si la sesión se archiva o se borra mientras la persona participa. |
 
 ### Ítem de lista
 
@@ -130,10 +133,13 @@ flowchart LR
 
 | Elemento | Acción | Resultado |
 |---|---|---|
-| Opción sin texto | Tocar | Se marca y el foco va a "Enviar" con desplazamiento suave (`block: nearest`). |
+| Opción sin texto | Tocar | Se marca y el foco va a "Enviar", que ya está a la vista. |
 | Opción que pide texto | Tocar | Aparece la caja con la nota "(obligatorio)" u "(opcional)". El foco va a la caja, centrada. |
-| "Enviar" | Tocar | Se deshabilita mientras guarda. En una lista vuelve a la lista con la pregunta en verde y sube al inicio. |
-| "Enviar" o "Registrar" | Con algo elegido o escrito | Quedan fijos abajo (`position: sticky`) sobre `--superficie`. |
+| "Enviar" | Tocar | Se deshabilita y dice "Enviando…" mientras guarda. En una lista vuelve a la lista con la pregunta en verde y sube al inicio. |
+| "Enviar" | Siempre | Fijo abajo (`position: sticky`) sobre `--superficie`, con borde superior 1 px `--borde`. `html` lleva `scroll-padding-bottom: 5rem` para que el campo con foco no quede tapado. |
+| "Registrar" | Tocar | "Registrando…" mientras guarda. Queda fijo abajo una vez que hay algo escrito. |
+| Pregunta respondida | Tocar en la lista | Abre la vista en solo lectura y el foco va al título. |
+| Línea de conexión | Cambia el estado | "Conectado" (punto `--exito`) o "Reconectando…" (punto `--aviso`), `.875rem`, `--texto-suave`. Pasa a "Reconectando…" si la consulta de cada 10 s falla o el navegador avisa que no hay red. Solo se reescribe al cambiar. No aparece en el modo de prueba. |
 | Cambio de paso desde la pantalla | Sin texto escrito | La vista cambia sola. |
 | Cambio de paso desde la pantalla | Con texto escrito o datos de registro cargados | La vista se queda. Aparece "La presentación avanzó." con el botón "Ir a lo que se está presentando". |
 | Descripción larga | "Ver más" | Expande y cambia a "Ver menos" (`aria-expanded`). |
@@ -146,7 +152,7 @@ flowchart LR
 | Comentario obligatorio vacío | "Escribí tu comentario antes de enviar." La caja queda con `aria-invalid="true"` y borde `--error`. |
 | Pregunta de texto libre vacía | "Escribí tu respuesta antes de enviar." |
 | Falla de conexión al guardar | "No pudimos guardar tu respuesta. Revisá la conexión y probá de nuevo." El botón vuelve a habilitarse. |
-| Respuesta ya guardada (doble envío) | Se toma como guardada, sin error. |
+| Respuesta ya guardada (otro dispositivo o datos borrados) | Queda la respuesta original y se muestra "Ya habías respondido esta pregunta." con "Las respuestas no se pueden cambiar." |
 
 ## Pantalla (`pantalla.html`)
 
@@ -169,9 +175,10 @@ La página ocupa el alto de la ventana (`100vh`) y nunca tiene scroll: cada esce
 | Alto máximo de la grilla | `filas × 15rem` más los espacios. Con pocas preguntas las tarjetas no se estiran. |
 | Tarjeta | Relleno `.625rem .875rem`, separación interna `.25rem`, borde 1 px `--borde`; al pasar el mouse, `--borde-campo`. |
 | Título | 700, 2 líneas como máximo. |
-| Filas de opción | Una línea: opción (hasta 45 % del ancho, con puntos suspensivos) · pista `.625rem` · porcentaje `1.125rem`. Ordenadas de mayor a menor. |
+| Páginas | Más de 8 preguntas: páginas parejas de hasta 8 (`js/resultados.js` `paginar`; 14 → 7 + 7). Rótulo "Página 1 de 2" sobre el título y "· 1 de 2" en la barra de controles. La página es de esta pantalla y vuelve a 1 al cambiar de paso. |
+| Filas de opción | Una línea: opción (hasta 45 % del ancho, con puntos suspensivos) · pista `.625rem` · porcentaje `1.125rem`. En el orden de la configuración, igual que el detalle. |
 | Colores | Opción con más respuestas en `--color-acento`. El resto en `--barra-secundaria`. Si hay empate, todas las empatadas en acento. Las opciones en 0 % se muestran. |
-| Opciones que no entran | `ajustarGrilla` oculta las filas que se salen y agrega "· +N opciones" al total. Se recalcula al cambiar el tamaño de la ventana y al cargar la tipografía. |
+| Opciones que no entran | `ajustarGrilla` oculta primero las de menos respuestas (nunca la líder), deja las demás en su orden y agrega "· +N opciones" al total. Se recalcula al cambiar el tamaño de la ventana y al cargar la tipografía. |
 | Pregunta de texto libre | "Respuesta libre" en lugar de barras. |
 | Pie | "N respuestas", `1rem`, `--texto-suave`. |
 
@@ -181,7 +188,7 @@ Solo aparecen con una sesión de administración iniciada o con `?demo`.
 
 | Elemento | Comportamiento |
 |---|---|
-| Barra `#controles` | Fija abajo sobre `--color-principal`: "← Anterior", nombre del paso, "Siguiente →" ("Finalizar" antes del final). |
+| Barra `#controles` | Fija abajo sobre `--color-principal`: "← Anterior", nombre del paso, "Siguiente →" ("Finalizar" antes del final). En un resumen con páginas, primero pasan de página y en la última cambian de paso; lo mismo con el teclado. |
 | Al abrir | Visible 3 s y después se oculta. |
 | Mouse | Aparece cuando el puntero entra en la franja de la barra. Se oculta 400 ms después de que sale. El cursor nunca se oculta. |
 | Teclado | →, AvPág y espacio avanzan. ←, RePág retroceden. Esc cierra el detalle. Tener la tecla apretada no repite el avance. |
@@ -206,13 +213,13 @@ Con `prefers-reduced-motion: reduce` las cuatro se desactivan: las barras saltan
 | Pregunta sin respuestas | Barras en 0 % y "0 respuestas". |
 | Título largo en el resumen | 2 líneas y puntos suspensivos. |
 | Nombre de opción largo en el resumen | Una línea con puntos suspensivos. En el detalle se muestra completo. |
-| 6 opciones y muchas preguntas | Las filas que no entran se ocultan y el pie avisa cuántas faltan. El detalle las muestra todas. |
+| 6 opciones y muchas preguntas | El resumen se pagina de a 8 como máximo. Si aun así no entran, se ocultan las de menos respuestas y el pie avisa cuántas faltan. El detalle las muestra todas. |
 | Descripción larga en la pantalla | 2 líneas. En el celular, 3 líneas y "Ver más". |
 | Más de 8 textos en el detalle | Se muestran los 8 más recientes. |
 | Código largo (hasta 30 caracteres) | En una línea, sin cortar en el guion. |
 | Sesión archivada mientras se presenta | La pantalla deja de responder a teclas y respuestas sin errores. |
 | Reinicio de resultados | Las respuestas de la ronda anterior se descartan al recibir el cambio. |
-| Sin conexión en el celular | Además de recibir los cambios al instante, consulta el paso cada 10 s y al volver a la pestaña o desbloquear el teléfono. El envío muestra el error de conexión. |
+| Sin conexión en el celular | Además de recibir los cambios al instante, consulta el paso cada 10 s, al volver a la pestaña o desbloquear el teléfono y al volver la red. La línea de conexión dice "Reconectando…" y el envío muestra el error de conexión. |
 
 ## Accesibilidad
 
@@ -221,9 +228,10 @@ Con `prefers-reduced-motion: reduce` las cuatro se desactivan: las barras saltan
 | Foco visible | `:focus-visible` con contorno de 3 px en `--foco` y separación 2 px. En opciones se dibuja sobre el `span`. |
 | Zonas táctiles | Botones, opciones, campos e ítems: 44 px de alto mínimo. "Ver más" y "+N etiquetas" amplían su zona táctil con `::after`. |
 | Color y texto | El estado nunca depende solo del color: "✓ Respondida", porcentajes junto a cada barra, mensajes de error en texto. |
-| Mensajes | Errores con `role="alert"`. Estado de envío y avisos con `role="status"`. |
+| Mensajes | Errores con `role="alert"`. Estado de envío, línea de conexión y avisos con `role="status"`. |
 | Etiquetas | Opciones dentro de `fieldset` con `legend`. Campos con `label`. Controles de la pantalla en `<nav aria-label="Controles de la presentación">`. |
-| Foco tras acciones | Elegir opción → "Enviar" o caja de texto. Error → el campo con problema. "+N etiquetas" → la primera etiqueta. |
+| Foco tras acciones | Elegir opción → "Enviar" o caja de texto. Error → el campo con problema. "+N etiquetas" → la primera etiqueta. Pregunta respondida → su título. |
+| Respuesta en solo lectura | La opción elegida va como texto, no como radio deshabilitado: un control deshabilitado baja el contraste y se anuncia como inactivo. |
 | Contraste (datos-gob-ar) | `--texto` sobre `--fondo` 12.35:1. `--texto-suave` sobre `--fondo` 6.63:1. `--acento-texto` sobre blanco 8.85:1. `--secundario-texto` sobre `--fondo` 4.97:1. `--color-acento` sobre blanco 5.09:1. `--borde-campo` sobre blanco 3.91:1. |
 | Contraste del violeta | `#B369ED` sobre blanco da 3.41:1: se usa solo en barras, filete y fondos, nunca como texto. Como texto se usa `--secundario-texto`. |
 | Contraste de colores de la sesión | El editor avisa si el color principal o el de acento no llegan a 4.5:1 con texto blanco ni oscuro. |

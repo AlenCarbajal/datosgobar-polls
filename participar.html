@@ -8,6 +8,7 @@
 <style>
   /* Solo tokens: los colores salen de css/base.css y temas/*.css */
   [hidden] { display: none !important; }
+  html { scroll-padding-bottom: 5rem; } /* el campo con foco no queda debajo de «Enviar» fijo */
   main { padding-top: 1rem; }
   #app > .mensaje--aviso { margin: 0 0 1rem; }
   .aviso-paso { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin: 0 0 1rem; }
@@ -39,15 +40,23 @@
   .descripcion { color: var(--texto-suave); margin: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
   .descripcion.abierta { display: block; }
   .pregunta .etiquetas { margin: .625rem 0 .75rem; }
-  .pregunta .opciones { grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); margin-top: .75rem; }
+  .pregunta .opciones { grid-template-columns: 1fr; margin-top: .75rem; }
   .pregunta legend { margin-top: 0; }
   /* Botones de texto chicos: el ::after agranda la zona táctil a ≥ 44 px sin ocupar más lugar */
   .enlace, .etiqueta--mas { position: relative; font: inherit; cursor: pointer; }
   .enlace::after, .etiqueta--mas::after { content: ''; position: absolute; inset: -.75rem -.5rem; }
   .enlace { font-weight: 600; color: var(--acento-texto); background: none; border: 0; padding: 0; text-decoration: underline; }
   .etiqueta--mas { border: 0; font-size: .8125rem; font-weight: 700; }
-  /* Enviar / Registrar: fijo abajo una vez que hay algo elegido o escrito */
-  .con-datos .acciones { position: sticky; bottom: 0; z-index: 1; background: var(--superficie); margin: .25rem 0 0; padding: .75rem 0; }
+  /* Enviar: siempre fijo abajo. Registrar: fijo una vez que hay algo escrito */
+  #pregunta .acciones, #registro.con-datos .acciones { position: sticky; bottom: 0; z-index: 1; background: var(--superficie); margin: .25rem -1rem 0; padding: .75rem 1rem; border-top: 1px solid var(--borde); }
+  /* Leída: la respuesta ya enviada, sin formulario */
+  .leida h2:focus { outline: none; }
+  .leida__texto { margin: .5rem 0 0; padding-left: .75rem; border-left: .25rem solid var(--borde); }
+  /* Conexión: el estado va en texto; el punto solo acompaña */
+  .conexion { display: flex; align-items: center; gap: .5rem; margin: .75rem 0 0; font-size: .875rem; color: var(--texto-suave); }
+  .espera .conexion { justify-content: center; }
+  .conexion::before { content: ''; width: .5rem; height: .5rem; border-radius: 50%; background: var(--exito); }
+  .conexion--caida::before { background: var(--aviso); }
   @media (max-width: 30rem) { .tarjeta { padding: 1rem; } }
 </style>
 </head>

@@ -3,13 +3,14 @@
 import { CONFIG } from '../config.js';
 import { $, esc, dibujarQr, cargarSesion } from './ui.js';
 import { normalizarCodigo, codigoValido, pasosDeSesion, opcionesDe } from './sesion.js';
-import { contar, grillaPara } from './resultados.js';
+import { contar, grillaPara, paginar } from './resultados.js';
 import { aplicarTema, resolverEstetica } from './tema.js';
 
 const escena = $('#escena');
 let api, sesion, codigo, demo = false, manda = false, timer, ocultar;
 let respuestas = [], inscriptos = 0, presentes = null;
 let detalle = null;   // pregunta abierta desde un resumen (solo en esta pantalla)
+let pagina = 0;       // página del resumen (solo en esta pantalla); vuelve a 0 al cambiar de paso
 let ultimoCambio = 0; // una lectura que salió antes de terminar un cambio de paso trae el paso viejo: se ignora
 let enCurso = 0;      // cambios de paso sin confirmar
 const qrGrande = document.createElement('div'), qrChico = document.createElement('div'); // se dibujan una vez y se mueven
@@ -56,7 +57,7 @@ function cabeza(titulo, eyebrow = '', descripcion = '', volver = false) {
 }
 
 // La opción con más respuestas va en el color de acento; las demás, en el secundario.
-const barra = (o, max) => `<div class="barra${o.n === max ? '' : ' barra--secundaria'}" style="--valor: ${o.pct}%"><span>${esc(o.texto)}</span>`
+const barra = (o, max) => `<div class="barra${o.n === max ? '' : ' barra--secundaria'}" style="--valor: ${o.pct}%" data-n="${o.n}"><span>${esc(o.texto)}</span>`
   + `<b>${o.pct}% <span class="suave">· ${o.n}</span></b><span class="barra__pista"></span></div>`;
 const barras = (opciones) => opciones.map(o => barra(o, Math.max(...opciones.map(x => x.n)))).join('');
 
@@ -70,10 +71,10 @@ function resultado(q, c) {
   </div>`;
 }
 
-// Cada tarjeta: las mismas barras con etiqueta que el detalle, de mayor a menor y en una línea por opción, y el total.
+// Cada tarjeta: las mismas barras con etiqueta que el detalle, en el mismo orden y en una línea por opción, y el total.
 function mini(q, c) {
   const { total, opciones } = conteo(c, q.id);
-  const dato = opciones.length ? `<span class="mini__barras">${barras([...opciones].sort((a, b) => b.n - a.n))}</span>`
+  const dato = opciones.length ? `<span class="mini__barras">${barras(opciones)}</span>`
     : '<span class="mini__dato">Respuesta libre</span>';
   return `<button type="button" class="mini" data-detalle="${esc(q.id)}"><span class="mini__texto">${esc(q.texto)}</span>
     ${dato}<span class="suave mini__total">${plural(total, 'respuesta', 'respuestas')}</span></button>`;
@@ -84,6 +85,7 @@ function dibujar() {
   const corta = location.host + location.pathname.replace(/[^/]*$/, 'participar.html') + '?s=' + codigo;
   const resumible = paso === 'cierre' ? todas(config) : p?.tipo === 'lista' ? p.preguntas : null;
   const i = resumible ? resumible.findIndex(q => q.id === detalle) : -1;
+  const { paginas, visibles } = paginaDe(resumible);
   if (!qrGrande.childElementCount) {
     const destino = location.protocol + '//' + corta + (demo ? '&demo' : '');
     dibujarQr(qrGrande, destino, 512);
@@ -93,8 +95,9 @@ function dibujar() {
     : paso === 'final' ? `<div class="grande"><h1 class="titulo-grande">${esc(config.final.titulo)}</h1><p>${esc(config.final.texto)}</p></div>`
     : i >= 0 ? cabeza(resumible[i].texto, paso === 'cierre' ? `Resumen · ${i + 1} de ${resumible.length}` : `${p.titulo} · ${i + 1} de ${resumible.length}`,
         resumible[i].descripcion, true) + resultado(resumible[i], c)
-    : resumible ? cabeza(paso === 'cierre' ? 'Resumen' : p.titulo, paso === 'cierre' ? config.titulo : '')
-        + (resumible.length ? `<div class="resumen">${resumible.map(q => mini(q, c)).join('')}</div>` : '')
+    : resumible ? cabeza(paso === 'cierre' ? 'Resumen' : p.titulo,
+        [paso === 'cierre' ? config.titulo : '', paginas > 1 ? `Página ${pagina + 1} de ${paginas}` : ''].filter(Boolean).join(' · '))
+        + (visibles.length ? `<div class="resumen">${visibles.map(q => mini(q, c)).join('')}</div>` : '')
     : p.tipo === 'registro' ? cabeza(p.titulo) + `<div class="grande"><span class="numero">${inscriptos}</span>
         <p>${inscriptos === 1 ? 'persona registrada' : 'personas registradas'}</p></div>`
     : cabeza(p.pregunta.texto, 'Pregunta', p.pregunta.descripcion) + resultado(p.pregunta, c);
@@ -103,6 +106,16 @@ function dibujar() {
   ajustarGrilla();
   controles();
 }
+
+// Resumen en páginas parejas de hasta 8 preguntas (paginar); el detalle sigue contando sobre todas.
+function paginaDe(resumible) {
+  const tamaños = paginar(resumible?.length ?? 0);
+  pagina = Math.min(pagina, tamaños.length - 1);
+  const desde = tamaños.slice(0, pagina).reduce((a, n) => a + n, 0);
+  return { paginas: tamaños.length, visibles: resumible?.slice(desde, desde + tamaños[pagina]) ?? [] };
+}
+const enResumen = () => !detalle && (pasoActual() === 'cierre' || pasoDe(pasoActual())?.tipo === 'lista');
+const paginasDelPaso = () => enResumen() ? paginar((pasoActual() === 'cierre' ? todas(sesion.config) : pasoDe(pasoActual()).preguntas).length).length : 1;
 
 function ajustarGrilla() {
   const g = $('.resumen');
@@ -114,9 +127,12 @@ function ajustarGrilla() {
   for (const b of g.querySelectorAll('.mini__barras')) {
     const filas = [...b.children], total = b.parentElement.querySelector('.mini__total');
     filas.forEach(f => { f.hidden = false; });
-    const limite = b.getBoundingClientRect().bottom + 1;
-    const ocultas = filas.filter(f => f.getBoundingClientRect().bottom > limite);
-    ocultas.forEach(f => { f.hidden = true; });
+    // Si no entran, se ocultan primero las de menos respuestas (nunca la líder) y las demás quedan en su orden.
+    const ocultas = [];
+    while (b.scrollHeight > b.clientHeight + 1 && ocultas.length < filas.length - 1) {
+      const menor = filas.filter(f => !f.hidden).reduce((a, f) => Number(f.dataset.n) <= Number(a.dataset.n) ? f : a);
+      menor.hidden = true; ocultas.push(menor);
+    }
     if (ocultas.length) total.dataset.mas = `+${ocultas.length} ${ocultas.length === 1 ? 'opción' : 'opciones'}`;
     else delete total.dataset.mas;
   }
@@ -132,7 +148,8 @@ function controles() {
   $('#ant').disabled = i === 0;
   $('#sig').hidden = pasos[i] === 'final';
   $('#sig').textContent = pasos[i + 1] === 'final' ? 'Finalizar' : 'Siguiente →';
-  $('#paso-nombre').textContent = nombrePaso(pasos[i]);
+  const n = paginasDelPaso();
+  $('#paso-nombre').textContent = nombrePaso(pasos[i]) + (n > 1 ? ` · ${pagina + 1} de ${n}` : '');
 }
 
 // Visible mientras el mouse está sobre la barra (o hay foco de teclado en ella); al salir, se oculta.
@@ -142,12 +159,14 @@ function mostrarControles(cerca = true) {
   else ocultar = setTimeout(() => document.body.classList.add('quieto'), 400);
 }
 
-function ver(paso) { sesion = { ...sesion, paso }; detalle = null; dibujar(); }
+function ver(paso) { sesion = { ...sesion, paso }; detalle = null; pagina = 0; dibujar(); }
 
 // Escrituras en cola: una a la vez y, si mientras tanto se pulsó de nuevo, solo el último destino.
 let destino = null, escribiendo = false, confirmado;
 async function mover(delta) {
   if (!sesion) return;
+  const otra = pagina + delta; // en un resumen con páginas, primero se pasa de página
+  if (enResumen() && otra >= 0 && otra < paginasDelPaso()) { pagina = otra; dibujar(); return; }
   const pasos = pasosDeSesion(sesion.config), anterior = pasoActual();
   const nuevo = pasos[Math.min(pasos.length - 1, Math.max(0, pasos.indexOf(anterior) + delta))];
   if (nuevo === anterior) return;
@@ -205,7 +224,7 @@ function recibir(s, inicio) {
   if (!sesion) return; // se archivó y ya no hay nada que mostrar
   if (enCurso || inicio <= ultimoCambio) s = { ...s, paso: sesion.paso }; // lectura vieja: el paso local manda
   const reinicio = s.ronda !== sesion.ronda, tema = JSON.stringify(s.config.estetica) !== JSON.stringify(sesion.config.estetica);
-  if (s.paso !== sesion.paso) detalle = null;
+  if (s.paso !== sesion.paso) { detalle = null; pagina = 0; }
   sesion = s;
   if (tema) { aplicarTema(s.config.estetica); pintarMarca(); }
   dibujar();

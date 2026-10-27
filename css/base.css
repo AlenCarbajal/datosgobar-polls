@@ -22,6 +22,7 @@
 
   /* Derivados: se recalculan solos con los colores de arriba */
   --principal-suave: color-mix(in srgb, var(--color-principal) 10%, var(--superficie));
+  --pista: var(--principal-suave); /* fondo de barras y progreso; más marcado en el proyector */
   --acento-suave: color-mix(in srgb, var(--color-acento) 12%, var(--superficie));
   --exito-suave: color-mix(in srgb, var(--exito) 10%, var(--superficie));
   --aviso-suave: color-mix(in srgb, var(--aviso) 12%, var(--superficie));
@@ -37,7 +38,7 @@
 }
 
 /* Vista proyectada: todo está en rem, así escala con el ancho del proyector. */
-html.pantalla { font-size: clamp(16px, 1.25vw, 40px); }
+html.pantalla { font-size: clamp(16px, 1.25vw, 40px); --pista: color-mix(in srgb, var(--color-principal) 15%, var(--superficie)); }
 
 * { box-sizing: border-box; }
 body {
@@ -136,9 +137,9 @@ textarea { min-height: 5rem; resize: vertical; }
 /* Progreso: <progress class="progreso" value="3" max="14"> */
 .progreso {
   appearance: none; width: 100%; height: .5rem; border: 0; border-radius: var(--radio);
-  background: var(--principal-suave); overflow: hidden;
+  background: var(--pista); overflow: hidden;
 }
-.progreso::-webkit-progress-bar { background: var(--principal-suave); }
+.progreso::-webkit-progress-bar { background: var(--pista); }
 .progreso::-webkit-progress-value { background: var(--color-acento); }
 .progreso::-moz-progress-bar { background: var(--color-acento); }
 
@@ -147,7 +148,7 @@ textarea { min-height: 5rem; resize: vertical; }
 .barra { display: grid; grid-template-columns: 1fr auto; gap: .375rem .75rem; align-items: baseline; margin: .875rem 0; }
 .barra .barra__pista { grid-column: 1 / -1; }
 /* --radio × 99: píldora con esquinas suaves o redondeadas, recta con "rectas" */
-.barra__pista { display: block; height: .625rem; background: var(--principal-suave); border-radius: calc(var(--radio) * 99); overflow: hidden; }
+.barra__pista { display: block; height: .625rem; background: var(--pista); border-radius: calc(var(--radio) * 99); overflow: hidden; }
 .barra__pista::before {
   content: ''; display: block; height: 100%; width: var(--valor, 0%);
   background: var(--color-acento); border-radius: inherit; transition: width .4s;
