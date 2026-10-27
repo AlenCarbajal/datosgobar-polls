@@ -111,7 +111,7 @@ const pintar = () => { if (sesion && !['inicio', 'final'].includes(pasoActual())
 function controles() {
   if (!manda) return;
   const pasos = pasosDeSesion(sesion.config), i = pasos.indexOf(pasoActual());
-  $('#ant').disabled = i === 0;
+  $('#ant').style.visibility = i === 0 ? 'hidden' : ''; // sin paso anterior no se muestra (y conserva su lugar: el nombre sigue centrado)
   $('#sig').hidden = pasos[i] === 'final';
   $('#sig').textContent = pasos[i + 1] === 'final' ? 'Finalizar' : 'Siguiente →';
   $('#paso-nombre').textContent = nombrePaso(pasos[i]);
