@@ -58,28 +58,22 @@ function cabeza(titulo, eyebrow = '', descripcion = '', volver = false) {
 // La opción con más respuestas va en el color de acento; las demás, en el secundario.
 const barra = (o, max) => `<div class="barra${o.n === max ? '' : ' barra--secundaria'}" style="--valor: ${o.pct}%"><span>${esc(o.texto)}</span>`
   + `<b>${o.pct}% <span class="suave">· ${o.n}</span></b><span class="barra__pista"></span></div>`;
-// Tonos de las opciones en la barra apilada del resumen: acento, principal y secundario, después más claros.
-const TONOS = ['--color-acento', '--color-principal', '--barra-secundaria'];
-const tono = (i) => `color-mix(in srgb, var(${TONOS[i % 3]}) ${i < 3 ? 100 : 45}%, var(--superficie))`;
+const barras = (opciones) => opciones.map(o => barra(o, Math.max(...opciones.map(x => x.n)))).join('');
 
 function resultado(q, c) {
   const { total, opciones, textos } = conteo(c, q.id);
   return `<div class="detalle${textos.length ? '' : ' detalle--solo'}"><div>
       <p class="total"><b>${total}</b> ${total === 1 ? 'respuesta' : 'respuestas'}</p>
-      ${opciones.map(o => barra(o, Math.max(...opciones.map(x => x.n)))).join('')}
+      ${barras(opciones)}
     </div>
     ${textos.length ? `<ul class="textos" aria-label="Textos más recientes">${textos.slice(0, 8).map(t => `<li>“${esc(t)}”</li>`).join('')}</ul>` : ''}
   </div>`;
 }
 
-// Cada tarjeta: la opción con más respuestas en grande, el reparto de todas en una barra apilada y el total.
+// Cada tarjeta: las mismas barras con etiqueta que el detalle, de mayor a menor y en una línea por opción, y el total.
 function mini(q, c) {
   const { total, opciones } = conteo(c, q.id);
-  const top = opciones.reduce((a, o) => o.n > a.n ? o : a, opciones[0]);
-  const dato = !total ? '<span class="mini__dato suave">Sin respuestas todavía</span><span class="apilada"></span>'
-    : top ? `<span class="mini__dato"><b>${top.pct}%</b> ${esc(top.texto)}</span>
-      <span class="apilada">${opciones.map((o, i) => `<span style="width: ${o.pct}%; background: ${tono(i)}"></span>`).join('')}</span>
-      <span class="leyenda">${opciones.map((o, i) => `<span><i style="background: ${tono(i)}"></i>${esc(o.texto)} ${o.pct}%</span>`).join('')}</span>`
+  const dato = opciones.length ? `<span class="mini__barras">${barras([...opciones].sort((a, b) => b.n - a.n))}</span>`
     : '<span class="mini__dato">Respuesta libre</span>';
   return `<button type="button" class="mini" data-detalle="${esc(q.id)}"><span class="mini__texto">${esc(q.texto)}</span>
     ${dato}<span class="suave mini__total">${plural(total, 'respuesta', 'respuestas')}</span></button>`;
@@ -117,6 +111,15 @@ function ajustarGrilla() {
   g.style.gridTemplateColumns = `repeat(${columnas}, minmax(0, 1fr))`;
   g.style.gridTemplateRows = `repeat(${filas}, minmax(0, 1fr))`;
   g.style.maxHeight = `calc(${filas} * 15rem + ${filas - 1} * .75rem)`; // con pocas preguntas, tarjetas de hasta 15rem
+  for (const b of g.querySelectorAll('.mini__barras')) {
+    const filas = [...b.children], total = b.parentElement.querySelector('.mini__total');
+    filas.forEach(f => { f.hidden = false; });
+    const limite = b.getBoundingClientRect().bottom + 1;
+    const ocultas = filas.filter(f => f.getBoundingClientRect().bottom > limite);
+    ocultas.forEach(f => { f.hidden = true; });
+    if (ocultas.length) total.dataset.mas = `+${ocultas.length} ${ocultas.length === 1 ? 'opción' : 'opciones'}`;
+    else delete total.dataset.mas;
+  }
 }
 
 // Con respuestas nuevas: en la bienvenida solo cambia el contador; el resto se redibuja.
@@ -280,6 +283,7 @@ try {
     });
     addEventListener('keydown', e => { if (e.key === 'Escape' && sesion && detalle) { detalle = null; dibujar(); } });
     addEventListener('resize', ajustarGrilla);
+    document.fonts?.ready.then(ajustarGrilla); // la tipografía del tema cambia cuánto entra en cada tarjeta
     api.escuchar(sesion.id, { alSesion: s => recibir(s, Date.now()), alRespuesta, alPresentes, comoPantalla: true });
     refrescar();
     manda = demo || await api.esAdmin().catch(() => false);

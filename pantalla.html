@@ -55,19 +55,23 @@
 
   /* Resumen: la grilla se ajusta al espacio (js/resultados.js grillaPara), sin scroll */
   .resumen { flex: 1; min-height: 0; display: grid; gap: .75rem; }
-  .mini { display: flex; flex-direction: column; gap: .5rem; min-height: 0; overflow: hidden; text-align: left;
+  .mini { display: flex; flex-direction: column; gap: .25rem; min-height: 0; overflow: hidden; text-align: left;
     font: inherit; color: var(--texto); cursor: pointer; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: .625rem .875rem; }
   .mini:hover { border-color: var(--borde-campo); }
   .mini__texto { font-weight: 700; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
   .mini__dato { font-size: 1.125rem; }
-  .mini__dato b { font-size: 2rem; color: var(--acento-texto); }
-  .apilada { display: flex; height: .75rem; flex: none; background: var(--principal-suave); border-radius: calc(var(--radio) * 99); overflow: hidden; }
-  .apilada span { transition: width .4s; }
-  .apilada span + span { box-shadow: -2px 0 0 var(--superficie); }
-  .leyenda { display: flex; flex-wrap: wrap; gap: .125rem .875rem; font-size: 1rem; color: var(--texto-suave); }
-  .leyenda i { display: inline-block; width: .625rem; height: .625rem; border-radius: 50%; margin-right: .375rem; }
+  /* En la tarjeta, cada barra va en una línea: opción | barra | porcentaje */
+  /* Opciones de mayor a menor; las que no entran se ocultan y el total avisa cuántas (js/pantalla.js ajustarGrilla) */
+  .mini__barras { display: flex; flex-direction: column; gap: .125rem; min-height: 0; overflow: hidden; }
+  .mini__total[data-mas]::after { content: ' · ' attr(data-mas); }
+  .mini__texto, .mini__total { flex: none; line-height: 1.25; }
+  .mini__total { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini .barra { grid-template-columns: minmax(0, 45%) 1fr auto; grid-template-areas: "opcion pista valor"; align-items: center; gap: .625rem; margin: 0; font-size: 1rem; line-height: 1.3; }
+  .mini .barra > span:first-child { grid-area: opcion; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini .barra > b { grid-area: valor; font-size: 1.125rem; }
+  .mini .barra > b .suave { display: none; }
+  .mini .barra .barra__pista { grid-area: pista; grid-column: auto; height: .625rem; }
   .mini__total { margin-top: auto; font-size: 1rem; }
-  @media (prefers-reduced-motion: reduce) { .apilada span { transition: none; } }
 
   .grande { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
   .grande .numero { font-size: 8rem; font-weight: 800; line-height: 1; color: var(--acento-texto); }
