@@ -107,7 +107,7 @@ function dibujar() {
   controles();
 }
 
-// Resumen en páginas parejas de hasta 8 preguntas (paginar); el detalle sigue contando sobre todas.
+// Resumen en páginas de 8 preguntas (paginar); el detalle sigue contando sobre todas.
 function paginaDe(resumible) {
   const tamaños = paginar(resumible?.length ?? 0);
   pagina = Math.min(pagina, tamaños.length - 1);

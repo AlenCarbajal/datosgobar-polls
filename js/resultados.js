@@ -33,8 +33,7 @@ export function grillaPara(n, ancho, alto) {
   return { columnas: mejor.columnas, filas: mejor.filas };
 }
 
-// Tamaño de cada página del resumen: las menos páginas posibles de hasta `max`, con tamaños parejos (14 → 7 + 7).
+// Tamaño de cada página del resumen: llenas de a `max` y el resto en la última (14 → 8 + 6).
 export function paginar(n, max = 8) {
-  const paginas = Math.max(1, Math.ceil(n / max)), base = Math.floor(n / paginas);
-  return Array.from({ length: paginas }, (_, i) => base + (i < n % paginas ? 1 : 0));
+  return Array.from({ length: Math.max(1, Math.ceil(n / max)) }, (_, i) => Math.min(max, n - i * max));
 }

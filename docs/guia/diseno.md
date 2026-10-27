@@ -175,7 +175,7 @@ La página ocupa el alto de la ventana (`100vh`) y nunca tiene scroll: cada esce
 | Alto máximo de la grilla | `filas × 15rem` más los espacios. Con pocas preguntas las tarjetas no se estiran. |
 | Tarjeta | Relleno `.625rem .875rem`, separación interna `.25rem`, borde 1 px `--borde`; al pasar el mouse, `--borde-campo`. |
 | Título | 700, 2 líneas como máximo. |
-| Páginas | Más de 8 preguntas: páginas parejas de hasta 8 (`js/resultados.js` `paginar`; 14 → 7 + 7). Rótulo "Página 1 de 2" sobre el título y "· 1 de 2" en la barra de controles. La página es de esta pantalla y vuelve a 1 al cambiar de paso. |
+| Páginas | Más de 8 preguntas: páginas de 8 y el resto en la última (`js/resultados.js` `paginar`; 14 → 8 + 6). Rótulo "Página 1 de 2" sobre el título y "· 1 de 2" en la barra de controles. La página es de esta pantalla y vuelve a 1 al cambiar de paso. |
 | Filas de opción | Una línea: opción (hasta 45 % del ancho, con puntos suspensivos) · pista `.625rem` · porcentaje `1.125rem`. En el orden de la configuración, igual que el detalle. |
 | Colores | Opción con más respuestas en `--color-acento`. El resto en `--barra-secundaria`. Si hay empate, todas las empatadas en acento. Las opciones en 0 % se muestran. |
 | Opciones que no entran | `ajustarGrilla` oculta primero las de menos respuestas (nunca la líder), deja las demás en su orden y agrega "· +N opciones" al total. Se recalcula al cambiar el tamaño de la ventana y al cargar la tipografía. |

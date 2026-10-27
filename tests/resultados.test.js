@@ -29,10 +29,11 @@ test('grillaPara', () => {
   assert.deepEqual(grillaPara(1, 1600, 800), { columnas: 1, filas: 1 });
 });
 
-test('paginar: páginas parejas de hasta 8', () => {
+test('paginar: páginas llenas de a 8 y el resto en la última', () => {
+  assert.deepEqual(paginar(0), [0]);
   assert.deepEqual(paginar(3), [3]);
   assert.deepEqual(paginar(8), [8]);
-  assert.deepEqual(paginar(9), [5, 4]);
-  assert.deepEqual(paginar(14), [7, 7]);
-  assert.deepEqual(paginar(17), [6, 6, 5]);
+  assert.deepEqual(paginar(9), [8, 1]);
+  assert.deepEqual(paginar(14), [8, 6]);
+  assert.deepEqual(paginar(17), [8, 8, 1]);
 });
