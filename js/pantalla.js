@@ -53,7 +53,7 @@ function cabeza(titulo, eyebrow = '', descripcion = '', volver = false) {
       ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ''}
       <h1>${esc(titulo)}</h1>
       ${descripcion ? `<p class="descripcion">${esc(descripcion)}</p>` : ''}
-    </div><div class="qr-chico"><div class="qr" id="qr-chico"></div><b>${esc(codigo)}</b></div></div>`;
+    </div><div class="qr-chico"><div class="qr" id="qr-chico"></div><p><span class="suave">Código</span><b>${esc(codigo)}</b></p></div></div>`;
 }
 
 const barra = (o) => `<div class="barra" style="--valor: ${o.pct}%"><span>${esc(o.texto)}</span><span class="barra__pista"></span><b>${o.n} · ${o.pct}%</b></div>`;
@@ -110,6 +110,7 @@ function ajustarGrilla() {
   const { columnas, filas } = grillaPara(g.childElementCount, g.clientWidth, g.clientHeight);
   g.style.gridTemplateColumns = `repeat(${columnas}, minmax(0, 1fr))`;
   g.style.gridTemplateRows = `repeat(${filas}, minmax(0, 1fr))`;
+  g.style.maxHeight = `calc(${filas} * 15rem + ${filas - 1} * .75rem)`; // con pocas preguntas, tarjetas de hasta 15rem
 }
 
 // Con respuestas nuevas: en la bienvenida solo cambia el contador; el resto se redibuja.

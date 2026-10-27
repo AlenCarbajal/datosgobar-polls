@@ -16,9 +16,9 @@ test('colorTextoSobre', () => {
 test('resolverEstetica: el preset completa lo que la sesión no fijó', () => {
   const gob = resolverEstetica({ preset: 'datos-gob-ar' });
   assert.equal(gob.colorPrincipal, '#232D4F');
-  assert.equal(gob.colorAcento, '#393793');
+  assert.equal(gob.colorAcento, '#0072BB');
   assert.equal(gob.tipografia, 'Montserrat');
-  assert.equal(gob.firma, true);
+  assert.equal(gob.firma, false);
   const mixto = resolverEstetica({ preset: 'datos-gob-ar', colorAcento: '#F5C518' });
   assert.equal(mixto.colorPrincipal, '#232D4F');
   assert.equal(mixto.tipografia, 'Montserrat');

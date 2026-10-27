@@ -16,8 +16,8 @@ export const ESTETICA_DEFECTO = {
 export const PRESETS = {
   neutro: {},
   'datos-gob-ar': {
-    colorPrincipal: '#232D4F', colorAcento: '#393793', tipografia: 'Montserrat',
-    logo: 'img/logo-datos-gob-ar-blanco.png', firma: true,
+    colorPrincipal: '#232D4F', colorAcento: '#0072BB', tipografia: 'Montserrat',
+    logo: 'img/logo-datos-gob-ar-blanco.png', firma: false,
   },
 };
 
