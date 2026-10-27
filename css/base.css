@@ -133,13 +133,15 @@ textarea { min-height: 5rem; resize: vertical; }
 .progreso::-webkit-progress-value { background: var(--color-acento); }
 .progreso::-moz-progress-bar { background: var(--color-acento); }
 
-/* Barra de resultado, siempre con número además de color:
-   <div class="barra" style="--valor: 60%"><span>Ok</span><span class="barra__pista"></span><b>12 · 60%</b></div> */
-.barra { display: grid; grid-template-columns: minmax(6rem, 30%) 1fr auto; gap: .625rem; align-items: center; margin: .5rem 0; }
-.barra__pista { height: 1.125rem; background: var(--principal-suave); border-radius: calc(var(--radio) / 2); overflow: hidden; }
+/* Barra de resultado, siempre con número además de color. Texto arriba, barra debajo:
+   <div class="barra" style="--valor: 60%"><span>Ok</span><b>60% <span class="suave">· 12</span></b><span class="barra__pista"></span></div> */
+.barra { display: grid; grid-template-columns: 1fr auto; gap: .375rem .75rem; align-items: baseline; margin: .875rem 0; }
+.barra .barra__pista { grid-column: 1 / -1; }
+/* --radio × 99: píldora con esquinas suaves o redondeadas, recta con "rectas" */
+.barra__pista { display: block; height: .625rem; background: var(--principal-suave); border-radius: calc(var(--radio) * 99); overflow: hidden; }
 .barra__pista::before {
   content: ''; display: block; height: 100%; width: var(--valor, 0%);
-  background: var(--color-acento); transition: width .4s;
+  background: var(--color-acento); border-radius: inherit; transition: width .4s;
 }
 .barra--secundaria .barra__pista::before { background: var(--barra-secundaria); }
 .barra b { font-variant-numeric: tabular-nums; }

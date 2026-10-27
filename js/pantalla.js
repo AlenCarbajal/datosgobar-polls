@@ -35,13 +35,12 @@ function pintarMarca() {
 // ---------- Escenas ----------
 const textoPresentes = () => presentes === null ? '' : plural(presentes, 'persona conectada', 'personas conectadas');
 
-function bienvenida(config, corta) {
+function bienvenida(config) {
   const { encabezado } = resolverEstetica(config.estetica);
   return `<div class="bienvenida"><div>
       ${encabezado ? `<p class="eyebrow">${esc(encabezado)}</p>` : ''}
       <h1 class="titulo-grande">${esc(config.titulo)}</h1>
-      <p>Sumate desde tu celular: escaneá el código QR o entrá a</p>
-      <p class="direccion">${esc(corta)}</p>
+      <p>Sumate desde tu celular: escaneá el código QR.</p>
       <p>Código: <span class="codigo">${esc(codigo)}</span></p>
       <p id="presentes"${presentes === null ? ' hidden' : ''}>${textoPresentes()}</p>
     </div><div class="qr" id="qr-grande"></div></div>`;
@@ -53,30 +52,36 @@ function cabeza(titulo, eyebrow = '', descripcion = '', volver = false) {
       ${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ''}
       <h1>${esc(titulo)}</h1>
       ${descripcion ? `<p class="descripcion">${esc(descripcion)}</p>` : ''}
-    </div><div class="qr-chico"><div class="qr" id="qr-chico"></div><p><span class="suave">Código</span><b>${esc(codigo)}</b></p></div></div>`;
+    </div><div class="qr-chico"><p><span class="suave">Código</span><b>${esc(codigo)}</b></p><div class="qr" id="qr-chico"></div></div></div>`;
 }
 
-const barra = (o) => `<div class="barra" style="--valor: ${o.pct}%"><span>${esc(o.texto)}</span><span class="barra__pista"></span><b>${o.n} · ${o.pct}%</b></div>`;
+// La opción con más respuestas va en el color de acento; las demás, en el secundario.
+const barra = (o, max) => `<div class="barra${o.n === max ? '' : ' barra--secundaria'}" style="--valor: ${o.pct}%"><span>${esc(o.texto)}</span>`
+  + `<b>${o.pct}% <span class="suave">· ${o.n}</span></b><span class="barra__pista"></span></div>`;
+// Tonos de las opciones en la barra apilada del resumen: alternan acento y principal, cada vez más claros.
+const tono = (i) => `color-mix(in srgb, var(--color-${i % 2 ? 'principal' : 'acento'}) ${[100, 100, 55, 50, 30, 25][i]}%, var(--superficie))`;
 
 function resultado(q, c) {
   const { total, opciones, textos } = conteo(c, q.id);
   return `<div class="detalle${textos.length ? '' : ' detalle--solo'}"><div>
       <p class="total"><b>${total}</b> ${total === 1 ? 'respuesta' : 'respuestas'}</p>
-      ${opciones.map(barra).join('')}
+      ${opciones.map(o => barra(o, Math.max(...opciones.map(x => x.n)))).join('')}
     </div>
     ${textos.length ? `<ul class="textos" aria-label="Textos más recientes">${textos.slice(0, 8).map(t => `<li>“${esc(t)}”</li>`).join('')}</ul>` : ''}
   </div>`;
 }
 
-// Cada tarjeta: la opción con más respuestas y su porcentaje (sobre el total), y el total.
+// Cada tarjeta: la opción con más respuestas en grande, el reparto de todas en una barra apilada y el total.
 function mini(q, c) {
   const { total, opciones } = conteo(c, q.id);
   const top = opciones.reduce((a, o) => o.n > a.n ? o : a, opciones[0]);
-  const dato = !total ? '<span class="mini__dato suave">Sin respuestas todavía</span>'
-    : top ? `<span class="mini__dato"><b>${top.pct}%</b> ${esc(top.texto)}</span><span class="barra__pista" style="--valor: ${top.pct}%"></span>`
+  const dato = !total ? '<span class="mini__dato suave">Sin respuestas todavía</span><span class="apilada"></span>'
+    : top ? `<span class="mini__dato"><b>${top.pct}%</b> ${esc(top.texto)}</span>
+      <span class="apilada">${opciones.map((o, i) => `<span style="width: ${o.pct}%; background: ${tono(i)}"></span>`).join('')}</span>
+      <span class="leyenda">${opciones.map((o, i) => `<span><i style="background: ${tono(i)}"></i>${esc(o.texto)} ${o.pct}%</span>`).join('')}</span>`
     : '<span class="mini__dato">Respuesta libre</span>';
   return `<button type="button" class="mini" data-detalle="${esc(q.id)}"><span class="mini__texto">${esc(q.texto)}</span>
-    ${dato}<span class="suave">${plural(total, 'respuesta', 'respuestas')}</span></button>`;
+    ${dato}<span class="suave mini__total">${plural(total, 'respuesta', 'respuestas')}</span></button>`;
 }
 
 function dibujar() {
@@ -89,7 +94,7 @@ function dibujar() {
     dibujarQr(qrGrande, destino, 512);
     dibujarQr(qrChico, destino, 256);
   }
-  escena.innerHTML = paso === 'inicio' ? bienvenida(config, corta)
+  escena.innerHTML = paso === 'inicio' ? bienvenida(config)
     : paso === 'final' ? `<div class="grande"><h1 class="titulo-grande">${esc(config.final.titulo)}</h1><p>${esc(config.final.texto)}</p></div>`
     : i >= 0 ? cabeza(resumible[i].texto, paso === 'cierre' ? `Resumen · ${i + 1} de ${resumible.length}` : `${p.titulo} · ${i + 1} de ${resumible.length}`,
         resumible[i].descripcion, true) + resultado(resumible[i], c)
@@ -126,10 +131,11 @@ function controles() {
   $('#paso-nombre').textContent = nombrePaso(pasos[i]);
 }
 
-function mostrarControles() {
-  document.body.classList.remove('quieto');
+// Visible mientras el mouse está en la franja de abajo (o hay foco de teclado en la barra); al salir, se oculta.
+function mostrarControles(cerca = true) {
   clearTimeout(ocultar);
-  ocultar = setTimeout(() => document.body.classList.add('quieto'), 3000);
+  if (cerca) document.body.classList.remove('quieto');
+  else ocultar = setTimeout(() => document.body.classList.add('quieto'), 400);
 }
 
 function ver(paso) { sesion = { ...sesion, paso }; detalle = null; dibujar(); }
@@ -170,7 +176,8 @@ function activarControles() {
   barra.addEventListener('focusin', mostrarControles);
   $('#ant').onclick = () => mover(-1);
   $('#sig').onclick = () => mover(1);
-  addEventListener('mousemove', mostrarControles);
+  addEventListener('mousemove', e => mostrarControles(e.clientY > innerHeight - 2 * barra.offsetHeight));
+  document.documentElement.addEventListener('mouseleave', () => mostrarControles(false));
   // Flechas, AvPág/RePág y barra espaciadora: funcionan con un control remoto de presentaciones.
   addEventListener('keydown', e => {
     if (e.repeat) return;
@@ -180,7 +187,7 @@ function activarControles() {
     if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); mover(-1); }
   });
   controles();
-  mostrarControles();
+  ocultar = setTimeout(() => document.body.classList.add('quieto'), 3000); // al abrir se ve 3 s
 }
 
 // ---------- Datos: Realtime + respaldo cada 15 s (3 s en un registro) ----------

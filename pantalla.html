@@ -25,18 +25,18 @@
 
   /* QR: se dibuja una vez y se escala con CSS */
   .qr img, .qr canvas { display: block; width: 100%; height: auto; }
-  .qr-chico { flex: none; display: flex; align-items: center; gap: .875rem; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: .5rem 1.25rem .5rem .5rem; }
-  .qr-chico .qr { width: 5.5rem; }
-  .qr-chico p { margin: 0; }
+  /* QR chico: solo un recordatorio del código; el QR para escanear es el de la bienvenida */
+  .qr-chico { flex: none; display: flex; align-items: center; gap: .75rem; text-align: right; }
+  .qr-chico .qr { width: 4rem; background: #FFFFFF; padding: .25rem; border-radius: calc(var(--radio) / 2); }
+  .qr-chico p { margin: 0; line-height: 1.2; }
   .qr-chico span { display: block; font-size: 1rem; }
-  .qr-chico b { display: block; font-size: 1.5rem; white-space: nowrap; }
+  .qr-chico b { display: block; font-size: 1.5rem; white-space: nowrap; color: var(--acento-texto); }
 
   /* Bienvenida: el título es lo más grande, junto al QR */
   .bienvenida { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 4rem; }
   .bienvenida > div:first-child { max-width: 50rem; }
   .titulo-grande { font-size: 4rem; line-height: 1.1; margin: 0 0 1.5rem; }
   .bienvenida p { font-size: 1.5rem; margin: 0 0 .5rem; }
-  .bienvenida .direccion { font-size: 1.75rem; font-weight: 700; overflow-wrap: anywhere; }
   .bienvenida .codigo { font-size: 3.5rem; font-weight: 800; letter-spacing: .04em; color: var(--acento-texto); }
   .bienvenida .qr { flex: none; width: min(45vh, 30vw); background: var(--superficie); padding: 1rem; border-radius: var(--radio); }
   #presentes { margin-top: 1.5rem; font-weight: 600; }
@@ -46,8 +46,9 @@
   .detalle--solo { grid-template-columns: 1fr; }
   .total { font-size: 1.5rem; margin: 0 0 .5rem; }
   .total b { font-size: 3rem; }
-  .barra { grid-template-columns: minmax(8rem, 30%) 1fr auto; gap: 1rem; margin: .75rem 0; font-size: 1.375rem; }
-  .barra__pista { height: 2rem; }
+  .barra { margin: 1.5rem 0; font-size: 1.5rem; }
+  .barra > b { font-size: 1.75rem; }
+  .barra__pista { height: 1.25rem; }
   .textos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .75rem; overflow: hidden; }
   .textos li { background: var(--superficie); border-left: .375rem solid var(--color-acento); border-radius: var(--radio); padding: .625rem 1rem; font-size: 1.25rem;
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; flex: none; }
@@ -59,9 +60,14 @@
   .mini:hover { border-color: var(--borde-campo); }
   .mini__texto { font-weight: 700; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
   .mini__dato { font-size: 1.125rem; }
-  .mini__dato b { font-size: 1.75rem; }
-  .mini .barra__pista { display: block; height: .75rem; }
-  .mini > :last-child { margin-top: auto; }
+  .mini__dato b { font-size: 2rem; color: var(--acento-texto); }
+  .apilada { display: flex; height: .75rem; flex: none; background: var(--principal-suave); border-radius: calc(var(--radio) * 99); overflow: hidden; }
+  .apilada span { transition: width .4s; }
+  .apilada span + span { box-shadow: -2px 0 0 var(--superficie); }
+  .leyenda { display: flex; flex-wrap: wrap; gap: .125rem .875rem; font-size: 1rem; color: var(--texto-suave); }
+  .leyenda i { display: inline-block; width: .625rem; height: .625rem; border-radius: 50%; margin-right: .375rem; }
+  .mini__total { margin-top: auto; font-size: 1rem; }
+  @media (prefers-reduced-motion: reduce) { .apilada span { transition: none; } }
 
   .grande { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
   .grande .numero { font-size: 8rem; font-weight: 800; line-height: 1; color: var(--acento-texto); }
