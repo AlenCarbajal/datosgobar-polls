@@ -71,10 +71,10 @@ test('fijarEstetica: guarda solo lo fijado y lo vacío vuelve al estilo', () => 
   e = fijarEstetica(e, 'colorPrincipal', '');
   assert.deepEqual(e, { preset: 'datos-gob-ar' });
   assert.equal(resolverEstetica(e).colorPrincipal, '#232D4F');
-  e = fijarEstetica(e, 'firma', false);
-  assert.equal(e.firma, false);
-  e = fijarEstetica(e, 'firma', null);
-  assert.equal(Object.hasOwn(e, 'firma'), false);
+  e = fijarEstetica(e, 'esquinas', 'rectas');
+  assert.equal(e.esquinas, 'rectas');
+  e = fijarEstetica(e, 'esquinas', null);
+  assert.equal(Object.hasOwn(e, 'esquinas'), false);
 });
 
 test('avisosContraste: avisa solo si ni el texto blanco ni el oscuro alcanzan 4.5', () => {

@@ -10,7 +10,7 @@
     "estetica": {
       "preset": "neutro", "organismo": "", "logo": "", "encabezado": "",
       "colorPrincipal": "#1F2937", "colorAcento": "#2563EB", "tipografia": "system-ui",
-      "esquinas": "suaves", "firma": false
+      "esquinas": "suaves"
     },
     "pasos": [
       {

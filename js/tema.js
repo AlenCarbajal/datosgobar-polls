@@ -9,7 +9,7 @@ const RADIOS = { rectas: '0px', suaves: '8px', redondeadas: '16px' };
 export const ESTETICA_DEFECTO = {
   preset: 'neutro', organismo: '', logo: '', encabezado: '',
   colorPrincipal: '#1F2937', colorAcento: '#2563EB', tipografia: 'system-ui',
-  esquinas: 'suaves', firma: false,
+  esquinas: 'suaves',
 };
 
 // Valores propios de cada preset de temas/. Un preset nuevo se agrega acá y en temas/<nombre>.css.
@@ -17,7 +17,7 @@ export const PRESETS = {
   neutro: {},
   'datos-gob-ar': {
     colorPrincipal: '#232D4F', colorAcento: '#0072BB', tipografia: 'Montserrat',
-    logo: 'img/logo-datos-gob-ar-blanco.png', firma: true,
+    logo: 'img/logo-datos-gob-ar-blanco.png',
   },
 };
 
@@ -75,7 +75,6 @@ export function aplicarTema(estetica, raiz = document.documentElement) {
     '--radio': RADIOS[e.esquinas],
   };
   for (const [k, v] of Object.entries(css)) raiz.style.setProperty(k, v);
-  raiz.toggleAttribute('data-firma', !!e.firma);
 
   // Relativo a este módulo, así funciona desde cualquier página (raíz o demo/).
   link('tema', new URL(`../temas/${e.preset}.css`, import.meta.url).href);

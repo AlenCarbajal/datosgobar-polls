@@ -22,7 +22,6 @@ En `admin.html`, abrí la sesión y bajá a **Estética**. La **Vista previa** d
 | **Color de acento (botones y barras)** | Botones, barras de resultados, opción elegida y anillo de foco. **Volver al color del estilo** quita el color fijado. |
 | **Tipografía** | La del sistema, o una de Google Fonts: Montserrat, Roboto, Open Sans, Lato, Source Sans 3, Merriweather. |
 | **Esquinas** | Rectas (0 px), suaves (8 px) o redondeadas (16 px). |
-| **Firma visual** | Solo aparece si el preset la define. Muestra u oculta el mosaico debajo del encabezado. |
 
 El preset por defecto de las sesiones nuevas es el de `preset` en `config.js`. También es la estética de `admin.html` y de las páginas sin sesión.
 
@@ -102,12 +101,3 @@ Estos se derivan solos de los anteriores con `color-mix()`. Un preset puede pisa
 Deberías ver `mi-preset` en la lista y la **Vista previa** con sus colores.
 
 Para que sea el preset de las sesiones nuevas, poné su nombre en `preset` de `config.js`.
-
-### Firma visual
-
-Una firma es un adorno propio del preset. El de `datos-gob-ar` es un mosaico debajo del encabezado.
-
-1. En `temas/<nombre>.css`, dale estilo a `.mosaico` con el selector `[data-firma]`. Usá `temas/datos-gob-ar.css` de ejemplo.
-2. En `PRESETS`, agregá `firma: true` (se muestra por defecto) o `firma: false` (oculta por defecto).
-
-Deberías ver el campo **Firma visual** en el editor al elegir ese estilo. Sin la clave `firma` en `PRESETS`, el campo no aparece.

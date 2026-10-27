@@ -348,9 +348,7 @@ function pintarEstetica(foco) {
     ${color('colorAcento', 'Color de acento (botones y barras)')}
     <div id="avisos-contraste" role="status"></div>
     ${elegir('tipografia', 'Tipografía', TIPOGRAFIAS.map(f => [f, nombreFuente(f)]), e.tipografia, nombreFuente(estilo.tipografia))}
-    ${elegir('esquinas', 'Esquinas', Object.entries(ESQUINAS), e.esquinas, ESQUINAS[estilo.esquinas])}
-    ${'firma' in PRESETS[r.preset] ? elegir('firma', 'Firma visual (mosaico bajo el encabezado)', [['si', 'Mostrar'], ['no', 'Ocultar']],
-      e.firma === true ? 'si' : e.firma === false ? 'no' : '', estilo.firma ? 'Mostrar' : 'Ocultar') : ''}`;
+    ${elegir('esquinas', 'Esquinas', Object.entries(ESQUINAS), e.esquinas, ESQUINAS[estilo.esquinas])}`;
   pintarAvisos();
   vistaPrevia();
   if (foco) document.getElementById(foco)?.focus();
@@ -360,8 +358,7 @@ $('#estetica').addEventListener('input', (ev) => {
   const k = ev.target.dataset.estetica;
   if (!k) return;
   let v = ev.target.value;
-  if (k === 'firma') v = { si: true, no: false }[v] ?? null;
-  else if (!v.trim()) v = '';
+  if (!v.trim()) v = '';
   borrador.estetica = ed.fijarEstetica(borrador.estetica, k, v);
   pintarAvisos();
   vistaPrevia();
