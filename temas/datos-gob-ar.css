@@ -7,7 +7,7 @@
 :root {
   --color-principal: #232D4F;  /* navy */
   --color-acento: #0072BB;     /* azul Poncho */
-  --celeste: #37BBED;
+  --violeta-claro: #E4CBF9;
   --violeta: #B369ED;
   --tile: #E8E9F1;
   --fondo: #F5F6FA;
@@ -22,7 +22,7 @@
   --fuente: 'Montserrat', system-ui, sans-serif;
 
   --principal-suave: var(--tile);
-  --barra-secundaria: var(--celeste);
+  --barra-secundaria: var(--violeta);
   --foco: var(--color-acento); /* 5.1:1 sobre blanco */
 }
 
@@ -30,5 +30,5 @@
 .mosaico span { display: grid; place-items: center; font-size: .875rem; color: var(--superficie); }
 .mosaico span:nth-child(1), .mosaico span:nth-child(5) { background: var(--color-acento); }
 .mosaico span:nth-child(2), .mosaico span:nth-child(6) { background: var(--violeta); }
-.mosaico span:nth-child(3), .mosaico span:nth-child(7) { background: var(--celeste); color: var(--color-principal); }
+.mosaico span:nth-child(3), .mosaico span:nth-child(7) { background: var(--violeta-claro); color: var(--color-principal); }
 .mosaico span:nth-child(4) { background: var(--tile); color: var(--color-principal); }

@@ -58,8 +58,9 @@ function cabeza(titulo, eyebrow = '', descripcion = '', volver = false) {
 // La opción con más respuestas va en el color de acento; las demás, en el secundario.
 const barra = (o, max) => `<div class="barra${o.n === max ? '' : ' barra--secundaria'}" style="--valor: ${o.pct}%"><span>${esc(o.texto)}</span>`
   + `<b>${o.pct}% <span class="suave">· ${o.n}</span></b><span class="barra__pista"></span></div>`;
-// Tonos de las opciones en la barra apilada del resumen: alternan acento y principal, cada vez más claros.
-const tono = (i) => `color-mix(in srgb, var(--color-${i % 2 ? 'principal' : 'acento'}) ${[100, 100, 55, 50, 30, 25][i]}%, var(--superficie))`;
+// Tonos de las opciones en la barra apilada del resumen: acento, principal y secundario, después más claros.
+const TONOS = ['--color-acento', '--color-principal', '--barra-secundaria'];
+const tono = (i) => `color-mix(in srgb, var(${TONOS[i % 3]}) ${i < 3 ? 100 : 45}%, var(--superficie))`;
 
 function resultado(q, c) {
   const { total, opciones, textos } = conteo(c, q.id);
