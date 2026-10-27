@@ -186,7 +186,7 @@ Solo aparecen con una sesión de administración iniciada o con `?demo`.
 
 | Elemento | Comportamiento |
 |---|---|
-| Barra `#controles` | Fija abajo sobre `--color-principal`: "← Anterior" (oculto en la bienvenida), nombre del paso, "Siguiente →" ("Finalizar" antes del final; oculto en el mensaje final). Siempre cambian de paso. La rueda del mouse o el trackpad recorren la escena. |
+| Barra `#controles` | Fija abajo sobre `--color-principal`: "← Anterior" (oculto en la bienvenida), nombre del paso (en la bienvenida, un ícono de casa de `1.75rem` con `aria-label="Bienvenida"`), "Siguiente →" ("Finalizar" antes del final; oculto en el mensaje final). Siempre cambian de paso. La rueda del mouse o el trackpad recorren la escena. |
 | Al abrir | Visible 3 s y después se oculta. |
 | Mouse | Aparece cuando el puntero entra en la franja de la barra. Se oculta 400 ms después de que sale. El cursor nunca se oculta. |
 | Teclado | →, AvPág y espacio avanzan. ←, RePág retroceden. Esc cierra el detalle. Tener la tecla apretada no repite el avance. |

@@ -14,6 +14,8 @@ let ultimoCambio = 0; // una lectura que salió antes de terminar un cambio de p
 let enCurso = 0;      // cambios de paso sin confirmar
 const qrGrande = document.createElement('div'), qrChico = document.createElement('div'); // se dibujan una vez y se mueven
 
+// Ícono de casa (Tabler Icons, MIT) en lugar de "Bienvenida" en la barra de controles.
+const CASA = '<svg class="icono" role="img" aria-label="Bienvenida" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></svg>';
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 const pasoActual = () => pasosDeSesion(sesion.config).includes(sesion.paso) ? sesion.paso : 'inicio';
 const pasoDe = (id) => sesion.config.pasos.find(p => p.id === id);
@@ -114,7 +116,7 @@ function controles() {
   $('#ant').style.visibility = i === 0 ? 'hidden' : ''; // sin paso anterior no se muestra (y conserva su lugar: el nombre sigue centrado)
   $('#sig').hidden = pasos[i] === 'final';
   $('#sig').textContent = pasos[i + 1] === 'final' ? 'Finalizar' : 'Siguiente →';
-  $('#paso-nombre').textContent = nombrePaso(pasos[i]);
+  $('#paso-nombre').innerHTML = pasos[i] === 'inicio' ? CASA : esc(nombrePaso(pasos[i]));
 }
 
 // Visible mientras el mouse está sobre la barra (o hay foco de teclado en ella); al salir, se oculta.
