@@ -1,12 +1,14 @@
 /* Preset "datos-gob-ar": identidad de datos.gob.ar con los acentos de gob.ar (Poncho).
    Logo por defecto: img/logo-datos-gob-ar-blanco.png (blanco, va sobre el encabezado navy).
    Tipografía Montserrat (js/tema.js la carga de Google Fonts).
-   Firma visual (oculta por defecto): franja de tiles debajo del encabezado, solo con [data-firma]:
+   Firma visual: mosaico de tiles con glifos debajo del encabezado, solo con [data-firma].
+   Sin navy ni índigo: se confundirían con el encabezado.
    <div class="mosaico" aria-hidden="true"><span>≠</span><span>á</span><span>↑</span><span>@</span><span>≥</span><span>π</span><span>»</span></div> */
 :root {
   --color-principal: #232D4F;  /* navy */
   --color-acento: #0072BB;     /* azul Poncho */
   --celeste: #37BBED;
+  --violeta: #B369ED;
   --tile: #E8E9F1;
   --fondo: #F5F6FA;
   --superficie: #FFFFFF;
@@ -24,10 +26,9 @@
   --foco: var(--color-acento); /* 5.1:1 sobre blanco */
 }
 
-[data-firma] .mosaico { display: grid; grid-template-columns: 3fr 1fr 2fr 4fr; height: .25rem; }
-.mosaico span { font-size: 0; }
-.mosaico span:nth-child(1) { background: var(--color-principal); }
-.mosaico span:nth-child(2) { background: var(--celeste); }
-.mosaico span:nth-child(3) { background: var(--color-acento); }
-.mosaico span:nth-child(4) { background: var(--tile); }
-.mosaico span:nth-child(n+5) { display: none; }
+[data-firma] .mosaico { display: grid; grid-template-columns: 3fr 1fr 2fr 1fr 4fr 1fr 2fr; height: 1.75rem; }
+.mosaico span { display: grid; place-items: center; font-size: .875rem; color: var(--superficie); }
+.mosaico span:nth-child(1), .mosaico span:nth-child(5) { background: var(--color-acento); }
+.mosaico span:nth-child(2), .mosaico span:nth-child(6) { background: var(--violeta); }
+.mosaico span:nth-child(3), .mosaico span:nth-child(7) { background: var(--celeste); color: var(--color-principal); }
+.mosaico span:nth-child(4) { background: var(--tile); color: var(--color-principal); }

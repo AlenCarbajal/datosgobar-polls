@@ -131,7 +131,7 @@ function controles() {
   $('#paso-nombre').textContent = nombrePaso(pasos[i]);
 }
 
-// Visible mientras el mouse está en la franja de abajo (o hay foco de teclado en la barra); al salir, se oculta.
+// Visible mientras el mouse está sobre la barra (o hay foco de teclado en ella); al salir, se oculta.
 function mostrarControles(cerca = true) {
   clearTimeout(ocultar);
   if (cerca) document.body.classList.remove('quieto');
@@ -176,7 +176,7 @@ function activarControles() {
   barra.addEventListener('focusin', mostrarControles);
   $('#ant').onclick = () => mover(-1);
   $('#sig').onclick = () => mover(1);
-  addEventListener('mousemove', e => mostrarControles(e.clientY > innerHeight - 2 * barra.offsetHeight));
+  addEventListener('mousemove', e => mostrarControles(e.clientY >= innerHeight - barra.offsetHeight));
   document.documentElement.addEventListener('mouseleave', () => mostrarControles(false));
   // Flechas, AvPág/RePág y barra espaciadora: funcionan con un control remoto de presentaciones.
   addEventListener('keydown', e => {
