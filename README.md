@@ -9,6 +9,7 @@ Los archivos se publican con GitHub Pages y los datos se guardan en un proyecto 
 2. [Sesiones](docs/guia/sesiones.md): crear, presentar, exportar y reiniciar.
 3. [Estética](docs/guia/estetica.md): colores, logo, tipografía y presets.
 4. [Problemas conocidos](docs/guia/problemas.md): síntomas, causas y soluciones.
+5. [Especificación de diseño](docs/guia/diseno.md): tokens, componentes, estados y comportamiento de cada vista.
 
 ## Páginas
 
