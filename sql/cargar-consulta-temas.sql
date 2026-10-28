@@ -242,6 +242,41 @@ insert into sesiones (codigo, config) values ('temas', $cfg$
           ]
         }
       ]
+    },
+    {
+      "id": "necesidades",
+      "tipo": "pregunta",
+      "pregunta": {
+        "id": "necesidades-1",
+        "texto": "¿Qué necesitás de nuestra parte?"
+      },
+      "opciones": [
+        {
+          "id": "asistencia",
+          "texto": "Asistencia técnica"
+        },
+        {
+          "id": "instalacion",
+          "texto": "Instalación Portal Andino propio"
+        },
+        {
+          "id": "migracion",
+          "texto": "Actualización/Migración Portal Andino"
+        },
+        {
+          "id": "apis",
+          "texto": "Consulta por APIs/otro servicio"
+        },
+        {
+          "id": "capacitacion",
+          "texto": "Capacitación"
+        },
+        {
+          "id": "otros",
+          "texto": "Otros",
+          "pideTexto": "obligatorio"
+        }
+      ]
     }
   ],
   "final": {
