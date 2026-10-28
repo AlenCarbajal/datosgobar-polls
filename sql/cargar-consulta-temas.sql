@@ -1,0 +1,261 @@
+-- Carga (o recarga) la consulta de temas y subtemas en la sesión "temas" y borra sus registros y respuestas.
+-- Correr en Supabase → SQL Editor. Se puede repetir: cada vez deja la sesión limpia en la Bienvenida.
+begin;
+insert into sesiones (codigo, config) values ('temas', $cfg$
+{
+  "titulo": "Consulta sobre supertemas y temas asociados",
+  "instrucciones": "Entrá a cada supertema, revisá sus temas asociados y votá una opción. Los que ya respondiste quedan marcados como respondidos.",
+  "estetica": {
+    "preset": "datos-gob-ar",
+    "organismo": "datos.gob.ar",
+    "logo": "img/logo-datos-gob-ar-blanco.png"
+  },
+  "pasos": [
+    {
+      "id": "rbioz2m",
+      "tipo": "registro",
+      "titulo": "Registrate para participar",
+      "descripcion": "Completá tus datos una sola vez. Después vas a poder responder sobre cada supertema.",
+      "obligatorio": true,
+      "campos": [
+        {
+          "id": "cegqx00",
+          "etiqueta": "Nombre",
+          "tipo": "texto",
+          "obligatorio": true
+        },
+        {
+          "id": "ccrnx7t",
+          "etiqueta": "Apellido",
+          "tipo": "texto",
+          "obligatorio": true
+        },
+        {
+          "id": "ci8iiu8",
+          "etiqueta": "Email",
+          "tipo": "email",
+          "obligatorio": true
+        },
+        {
+          "id": "cpk9383",
+          "etiqueta": "Organismo",
+          "tipo": "texto",
+          "obligatorio": true
+        }
+      ]
+    },
+    {
+      "id": "l5l2o0a",
+      "tipo": "lista",
+      "titulo": "Consulta sobre supertemas y temas asociados",
+      "opciones": [
+        {
+          "id": "o98jpyv",
+          "texto": "OK"
+        },
+        {
+          "id": "oivffl4",
+          "texto": "Comentar",
+          "pideTexto": "obligatorio"
+        }
+      ],
+      "preguntas": [
+        {
+          "id": "qkwighi",
+          "texto": "Población y sociedad",
+          "descripcion": "Políticas destinadas a la población y asuntos vinculados con la estructura demográfica del país, composición y dinámica de la población, condiciones de vida y características culturales y de identidad.",
+          "etiquetas": [
+            "Género y diversidad sexual",
+            "Discapacidad",
+            "Culto y religión",
+            "Demografía y población",
+            "Pueblos originarios",
+            "Migración y naturalización",
+            "Condiciones habitacionales",
+            "Pobreza y desigualdad"
+          ]
+        },
+        {
+          "id": "qcxqhd8",
+          "texto": "Medio ambiente",
+          "descripcion": "Estado y evolución de los recursos naturales, los seres vivos y su interacción con el contexto, la calidad del ambiente y los fenómenos meteorológicos.",
+          "etiquetas": [
+            "Contaminación y calidad ambiental",
+            "Residuos y basurales",
+            "Sustentabilidad",
+            "Biodiversidad y recursos naturales",
+            "Áreas protegidas",
+            "Suelo y degradación de tierras",
+            "Meteorología"
+          ]
+        },
+        {
+          "id": "qbqmjov",
+          "texto": "Economía y finanzas",
+          "descripcion": "Gestión económica, asignación de recursos y control presupuestario, así como datos que describen la actividad productiva, el nivel de precios, el comercio, el mercado de trabajo, las finanzas públicas y el sector externo de la economía argentina.",
+          "etiquetas": [
+            "Infraestructura y obras públicas",
+            "Prestaciones sociales",
+            "Presupuesto",
+            "Cuentas nacionales",
+            "Precios",
+            "Sector primario",
+            "Sector secundario",
+            "Sector terciario",
+            "Comercio exterior",
+            "Mercado laboral e ingresos",
+            "Deuda pública",
+            "Mercado financiero"
+          ]
+        },
+        {
+          "id": "qdn37n9",
+          "texto": "Transporte",
+          "descripcion": "Asuntos vinculados con la demanda, oferta y calidad de los distintos modos de transporte de personas y cargas.",
+          "etiquetas": [
+            "Transporte público urbano",
+            "Aviación y aeropuertos",
+            "Transporte marítimo, fluvial y puertos",
+            "Ferrocarriles"
+          ]
+        },
+        {
+          "id": "qxy33wk",
+          "texto": "Energía",
+          "descripcion": "Asuntos vinculados con la generación, distribución y conservación de la energía en sus distintas formas y fuentes.",
+          "etiquetas": [
+            "Hidrocarburos y combustibles fósiles",
+            "Energía eléctrica",
+            "Energía hidroeléctrica",
+            "Energías renovables"
+          ]
+        },
+        {
+          "id": "qhyruav",
+          "texto": "Justicia y seguridad",
+          "descripcion": "Asuntos vinculados con el sistema judicial, derechos humanos, delitos e instituciones de seguridad y procesos electorales.",
+          "etiquetas": [
+            "Estadísticas criminales",
+            "Canales y líneas de denuncia",
+            "Trámites y registro automotor",
+            "Servicio penitenciario",
+            "Centros y tribunales de justicia",
+            "Administración de la justicia",
+            "Derechos humanos",
+            "Violencia de género",
+            "Elecciones"
+          ]
+        },
+        {
+          "id": "qnzb8iz",
+          "texto": "Gobierno y sector público",
+          "descripcion": "Asuntos vinculados con la estructura del Estado y la gobernanza: funcionamiento de las instituciones públicas, transparencia, rendición de cuentas y patrimonio del Estado.",
+          "etiquetas": [
+            "Compras y contrataciones",
+            "Rendición de cuentas",
+            "Personal del Estado",
+            "Inmuebles del Estado",
+            "Gobierno abierto"
+          ]
+        },
+        {
+          "id": "q7f9p2o",
+          "texto": "Agroganadería, pesca y forestación",
+          "descripcion": "Procesos destinados a la explotación, manejo y aprovechamiento de los recursos del suelo, el agua y el aire para la producción de alimentos, fibras y otros productos de origen orgánico. Comprende datos sobre la producción, precios y estructura del sector agropecuario, forestal y pesquero.",
+          "etiquetas": [
+            "Lácteos",
+            "Agricultura",
+            "Ganadería",
+            "Pesca",
+            "Vitivinicultura",
+            "Apicultura",
+            "Horticultura",
+            "Agroindustria"
+          ]
+        },
+        {
+          "id": "qmse4j8",
+          "texto": "Salud",
+          "descripcion": "Asuntos vinculados con el consumo, la vigilancia y el estado de la salud de la población, los recursos del sistema sanitario y los eventos vitales.",
+          "etiquetas": [
+            "Medicamentos",
+            "Vigilancia epidemiológica",
+            "Vacunación",
+            "Estadísticas vitales",
+            "Recursos humanos en salud",
+            "Salud sexual y reproductiva",
+            "Obras sociales y prepagas",
+            "Establecimientos de salud",
+            "Especialidades y tratamientos médicos",
+            "Trasplantes y donaciones",
+            "Adicciones y consumo problemático"
+          ]
+        },
+        {
+          "id": "qfqpmvn",
+          "texto": "Educación, cultura y deportes",
+          "descripcion": "Datos sobre el sistema educativo, el acceso a la cultura, el deporte y las políticas en estos ámbitos.",
+          "etiquetas": [
+            "Educación",
+            "Evaluación educativa",
+            "Cultura",
+            "Deportes"
+          ]
+        },
+        {
+          "id": "qfna6ze",
+          "texto": "Ciencia y tecnología",
+          "descripcion": "Acceso y uso de tecnologías de la información y la comunicación (TIC), la ciencia, la investigación y la infraestructura digital.",
+          "etiquetas": [
+            "Acceso y uso de TIC",
+            "Ciencia e investigación",
+            "Infraestructura digital"
+          ]
+        },
+        {
+          "id": "qyzjbm4",
+          "texto": "Territorio",
+          "descripcion": "Asuntos vinculados con la geografía y el territorio: división político-administrativa, ecosistemas, geología y recursos hídricos del país.",
+          "etiquetas": [
+            "División territorial",
+            "Ecosistemas",
+            "Geología",
+            "Hidrografía"
+          ]
+        },
+        {
+          "id": "q5w1y6p",
+          "texto": "Asuntos internacionales",
+          "descripcion": "Aspectos vinculados con la política internacional de Argentina, las relaciones diplomáticas y la inserción del país en el sistema internacional.",
+          "etiquetas": [
+            "Diplomacia"
+          ]
+        },
+        {
+          "id": "qn95yo3",
+          "texto": "Defensa",
+          "descripcion": "Asuntos vinculados con el personal y la conducción de las Fuerzas Armadas, la defensa territorial, la soberanía y la autodeterminación de la Nación.",
+          "etiquetas": [
+            "Fuerzas Armadas",
+            "Soberanía, protección y vigilancia",
+            "Riesgos y desastres"
+          ]
+        }
+      ]
+    }
+  ],
+  "final": {
+    "titulo": "¡Gracias por participar!",
+    "texto": ""
+  }
+}
+$cfg$::jsonb)
+on conflict (codigo) do update
+  set config = excluded.config, paso = 'inicio', ronda = sesiones.ronda + 1, archivada = false;
+delete from respuestas where sesion_id = (select id from sesiones where codigo = 'temas');
+delete from inscripciones where sesion_id = (select id from sesiones where codigo = 'temas');
+commit;
+select codigo, paso, ronda, config->>'titulo' as titulo,
+  (select count(*) from inscripciones i where i.sesion_id = s.id) as registros,
+  (select count(*) from respuestas r where r.sesion_id = s.id) as respuestas
+from sesiones s where codigo = 'temas';
